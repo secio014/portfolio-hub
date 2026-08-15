@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { generateSummaryText } from "@/lib/ai/summarize.server";
-import { fetchReadme } from "@/lib/github-sync.functions";
+import { cleanToken, fetchReadme } from "@/lib/github-sync.functions";
 
 const schema = z.object({
   title: z.string(),
@@ -31,7 +31,7 @@ export const generateProjectSummary = createServerFn({ method: "POST" })
 
     let description = data.description;
     if (data.readmeFrom) {
-      const readme = await fetchReadme(data.readmeFrom, process.env["GITHUB_TOKEN"]);
+      const readme = await fetchReadme(data.readmeFrom, cleanToken(process.env["GITHUB_TOKEN"]));
       if (!readme) throw new Error("Could not fetch a README for this repository.");
       description = readme.slice(0, 6000);
     }
