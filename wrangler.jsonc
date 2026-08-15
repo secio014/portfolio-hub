@@ -2,7 +2,20 @@
   // Merged into the generated `.output/server/wrangler.json` at build time
   // (see nitro's cloudflare preset). Adds the Workers AI binding used to
   // auto-generate project summaries — see src/lib/ai/summarize.server.ts.
+  "name": "portfolio-hub",
+  // Nitro's cloudflare-module preset defaults wrangler's `no_bundle` to true,
+  // which uploads the SSR output as separate linked .mjs chunks. That triggers
+  // a rollup/workerd module-evaluation-order bug: a chunk that calls
+  // `createCsrfMiddleware(...)` at its top level sometimes runs before the
+  // chunk defining it finishes initializing, throwing "is not a function".
+  // Forcing wrangler to bundle everything into one file avoids the cross-file
+  // live-binding race.
+  "no_bundle": false,
   "ai": {
     "binding": "AI"
-  }
+  },
+  "routes": [
+    { "pattern": "pedrosecio.dev", "custom_domain": true },
+    { "pattern": "www.pedrosecio.dev", "custom_domain": true }
+  ]
 }
