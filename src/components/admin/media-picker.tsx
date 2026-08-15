@@ -19,14 +19,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useI18n, type TranslationKey } from "@/lib/i18n";
 
 type Align = "none" | "left" | "center" | "right";
 
-const ALIGN_OPTIONS: { value: Align; label: string; icon: typeof Rows3 }[] = [
-  { value: "none", label: "Bloco", icon: Rows3 },
-  { value: "left", label: "Esquerda", icon: AlignHorizontalJustifyStart },
-  { value: "center", label: "Centro", icon: AlignHorizontalJustifyCenter },
-  { value: "right", label: "Direita", icon: AlignHorizontalJustifyEnd },
+const ALIGN_OPTIONS: { value: Align; labelKey: TranslationKey; icon: typeof Rows3 }[] = [
+  { value: "none", labelKey: "admin.media.alignBlock", icon: Rows3 },
+  { value: "left", labelKey: "admin.media.alignLeft", icon: AlignHorizontalJustifyStart },
+  { value: "center", labelKey: "admin.media.alignCenter", icon: AlignHorizontalJustifyCenter },
+  { value: "right", labelKey: "admin.media.alignRight", icon: AlignHorizontalJustifyEnd },
 ];
 
 const BUCKET = "portfolio";
@@ -38,7 +39,7 @@ function storagePath(name: string) {
   return `media/${Date.now().toString(36)}-${safe}`;
 }
 
-async function uploadAndSign(file: File) {
+async function uploadAndSign(file: File, urlErrorMessage: string) {
   const path = storagePath(file.name);
   const { error: uploadError } = await supabase.storage.from(BUCKET).upload(path, file, {
     upsert: false,
@@ -47,7 +48,7 @@ async function uploadAndSign(file: File) {
   const { data, error: signError } = await supabase.storage
     .from(BUCKET)
     .createSignedUrl(path, SIGNED_URL_TTL);
-  if (signError || !data?.signedUrl) throw signError ?? new Error("Falha ao gerar URL");
+  if (signError || !data?.signedUrl) throw signError ?? new Error(urlErrorMessage);
   return data.signedUrl;
 }
 
@@ -62,6 +63,7 @@ export function MediaPickerDialog({
   onOpenChange: (open: boolean) => void;
   onInsert: (markdown: string) => void;
 }) {
+  const { t } = useI18n();
   const [mode, setMode] = useState<"url" | "upload">("url");
   const [url, setUrl] = useState("");
   const [align, setAlign] = useState<Align>("none");
@@ -88,12 +90,12 @@ export function MediaPickerDialog({
   async function handleUpload(file: File) {
     setUploading(true);
     try {
-      const signedUrl = await uploadAndSign(file);
+      const signedUrl = await uploadAndSign(file, t("admin.media.urlGenerationFailed"));
       onInsert(markdownFor(signedUrl));
       onOpenChange(false);
       reset();
     } catch (error) {
-      toast.error((error as { message?: string }).message ?? "Falha no upload");
+      toast.error((error as { message?: string }).message ?? t("admin.media.uploadFailed"));
     } finally {
       setUploading(false);
     }
@@ -110,17 +112,17 @@ export function MediaPickerDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="font-mono text-sm">
-            {kind === "video" ? "Inserir vídeo" : "Inserir imagem"}
+            {kind === "video" ? t("admin.media.insertVideo") : t("admin.media.insertImage")}
           </DialogTitle>
           <DialogDescription>
             {kind === "video"
-              ? "Cole um link do YouTube, TikTok ou Instagram, um link direto (.mp4/.webm), ou envie um arquivo."
-              : "Cole o link de uma imagem ou envie um arquivo."}
+              ? t("admin.media.videoDescription")
+              : t("admin.media.imageDescription")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-1.5">
-          <span className="mono-label">Posição no texto</span>
+          <span className="mono-label">{t("admin.media.textPosition")}</span>
           <div className="grid grid-cols-4 gap-1.5">
             {ALIGN_OPTIONS.map((option) => (
               <button
@@ -134,13 +136,15 @@ export function MediaPickerDialog({
                 }`}
               >
                 <option.icon className="size-4" />
-                {option.label}
+                {t(option.labelKey)}
               </button>
             ))}
           </div>
           {align === "left" || align === "right" ? (
             <p className="font-mono text-[11px] text-muted-foreground">
-              O texto ao redor flui ao lado {align === "left" ? "direito" : "esquerdo"}.
+              {align === "left"
+                ? t("admin.media.textFlowsRight")
+                : t("admin.media.textFlowsLeft")}
             </p>
           ) : null}
         </div>
@@ -148,10 +152,10 @@ export function MediaPickerDialog({
         <Tabs value={mode} onValueChange={(value) => setMode(value as "url" | "upload")}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="url" className="font-mono text-xs">
-              <LinkIcon className="mr-1.5 size-3.5" /> Link
+              <LinkIcon className="mr-1.5 size-3.5" /> {t("admin.media.link")}
             </TabsTrigger>
             <TabsTrigger value="upload" className="font-mono text-xs">
-              <Upload className="mr-1.5 size-3.5" /> Enviar arquivo
+              <Upload className="mr-1.5 size-3.5" /> {t("admin.media.uploadFile")}
             </TabsTrigger>
           </TabsList>
 
@@ -160,7 +164,7 @@ export function MediaPickerDialog({
               autoFocus
               value={url}
               placeholder={
-                kind === "video" ? "https://youtube.com/watch?v=..." : "https://.../imagem.jpg"
+                kind === "video" ? "https://youtube.com/watch?v=..." : t("admin.media.imagePlaceholder")
               }
               onChange={(event) => setUrl(event.target.value)}
               onKeyDown={(event) => {
@@ -177,7 +181,7 @@ export function MediaPickerDialog({
               onClick={insertUrl}
               disabled={!url.trim()}
             >
-              Inserir
+              {t("admin.media.insert")}
             </Button>
           </TabsContent>
 
@@ -201,7 +205,11 @@ export function MediaPickerDialog({
               onClick={() => inputRef.current?.click()}
             >
               <Upload className="size-3.5" />
-              {uploading ? "Enviando…" : kind === "video" ? "Escolher vídeo" : "Escolher imagem"}
+              {uploading
+                ? t("admin.media.uploading")
+                : kind === "video"
+                  ? t("admin.media.chooseVideo")
+                  : t("admin.media.chooseImage")}
             </Button>
           </TabsContent>
         </Tabs>

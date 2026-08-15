@@ -26,7 +26,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { LOCALES, type Locale } from "@/lib/i18n";
+import { LOCALES, useI18n, type Locale } from "@/lib/i18n";
 import { settingsQuery } from "@/lib/queries";
 import { MediaPickerDialog } from "./media-picker";
 
@@ -38,6 +38,7 @@ export const db = supabase as unknown as {
 export type Row = Record<string, any>;
 
 export function useAdminTable(table: string, orderBy = "order", ascending = true) {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const key = ["admin", table];
 
@@ -65,13 +66,11 @@ export function useAdminTable(table: string, orderBy = "order", ascending = true
   ) {
     const { error, data } = await promise;
     if (error) {
-      toast.error((error as { message?: string }).message ?? "Algo deu errado");
+      toast.error((error as { message?: string }).message ?? t("admin.kit.genericError"));
       return false;
     }
     if (checkAffected && Array.isArray(data) && data.length === 0) {
-      toast.error(
-        "Nada foi alterado (0 linhas afetadas) — provavelmente bloqueado por permissão (RLS). Verifique se você ainda está autenticado como admin.",
-      );
+      toast.error(t("admin.kit.rlsBlocked"));
       return false;
     }
     toast.success(message);
@@ -83,21 +82,21 @@ export function useAdminTable(table: string, orderBy = "order", ascending = true
     rows: query.data ?? [],
     isLoading: query.isLoading,
     refresh,
-    insert: (values: Row) => run(db.from(table).insert(values), "Criado"),
+    insert: (values: Row) => run(db.from(table).insert(values), t("admin.kit.created")),
     /** Like `insert`, but also returns the created row (e.g. to get its new id). */
     insertAndReturn: async (values: Row): Promise<Row | null> => {
       const { data, error } = await db.from(table).insert(values).select().single();
       if (error) {
-        toast.error((error as { message?: string }).message ?? "Algo deu errado");
+        toast.error((error as { message?: string }).message ?? t("admin.kit.genericError"));
         return null;
       }
-      toast.success("Criado");
+      toast.success(t("admin.kit.created"));
       refresh();
       return data as Row;
     },
     update: (id: string, values: Row) =>
-      run(db.from(table).update(values).eq("id", id).select(), "Salvo", true),
-    remove: (id: string) => run(db.from(table).delete().eq("id", id), "Excluído"),
+      run(db.from(table).update(values).eq("id", id).select(), t("admin.kit.saved"), true),
+    remove: (id: string) => run(db.from(table).delete().eq("id", id), t("admin.kit.deleted")),
   };
 }
 
@@ -301,7 +300,7 @@ export function PromptDialog({
   description,
   placeholder,
   defaultValue = "",
-  confirmLabel = "Confirmar",
+  confirmLabel,
   allowEmpty = false,
   onOpenChange,
   onSubmit,
@@ -316,6 +315,7 @@ export function PromptDialog({
   onOpenChange: (open: boolean) => void;
   onSubmit: (value: string) => void;
 }) {
+  const { t } = useI18n();
   const [value, setValue] = useState(defaultValue);
 
   useEffect(() => {
@@ -355,10 +355,10 @@ export function PromptDialog({
             className="h-9 font-mono text-xs"
             onClick={() => onOpenChange(false)}
           >
-            Cancelar
+            {t("admin.kit.cancel")}
           </Button>
           <Button type="button" className="h-9 font-mono text-xs" onClick={submit}>
-            {confirmLabel}
+            {confirmLabel ?? t("admin.kit.confirm")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -371,7 +371,7 @@ export function ConfirmDialog({
   open,
   title,
   description,
-  confirmLabel = "Excluir",
+  confirmLabel,
   onOpenChange,
   onConfirm,
 }: {
@@ -382,6 +382,7 @@ export function ConfirmDialog({
   onOpenChange: (open: boolean) => void;
   onConfirm: () => void;
 }) {
+  const { t } = useI18n();
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent>
@@ -390,12 +391,14 @@ export function ConfirmDialog({
           {description ? <AlertDialogDescription>{description}</AlertDialogDescription> : null}
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel className="h-9 font-mono text-xs">Cancelar</AlertDialogCancel>
+          <AlertDialogCancel className="h-9 font-mono text-xs">
+            {t("admin.kit.cancel")}
+          </AlertDialogCancel>
           <AlertDialogAction
             className="h-9 bg-destructive font-mono text-xs text-destructive-foreground hover:bg-destructive/90"
             onClick={onConfirm}
           >
-            {confirmLabel}
+            {confirmLabel ?? t("admin.kit.delete")}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
@@ -412,6 +415,7 @@ export function MarkdownEditor({
   onChange: (value: string) => void;
   rows?: number;
 }) {
+  const { t } = useI18n();
   const [ref, setRef] = useState<HTMLTextAreaElement | null>(null);
   const [prompt, setPrompt] = useState<"code" | null>(null);
   const [media, setMedia] = useState<"image" | "video" | null>(null);
@@ -452,30 +456,30 @@ export function MarkdownEditor({
           onClick={() => setPrompt("code")}
           className="rounded-sm px-1.5 py-0.5 font-mono text-[10px] uppercase text-muted-foreground transition-colors hover:bg-accent hover:text-signal"
         >
-          bloco de código
+          {t("admin.markdown.codeBlock")}
         </button>
         <button
           type="button"
           onClick={() => setMedia("image")}
           className="rounded-sm px-1.5 py-0.5 font-mono text-[10px] uppercase text-muted-foreground transition-colors hover:bg-accent hover:text-signal"
         >
-          imagem
+          {t("admin.markdown.image")}
         </button>
         <button
           type="button"
           onClick={() => setMedia("video")}
           className="rounded-sm px-1.5 py-0.5 font-mono text-[10px] uppercase text-muted-foreground transition-colors hover:bg-accent hover:text-signal"
         >
-          vídeo
+          {t("admin.markdown.video")}
         </button>
         {avatarUrl ? (
           <button
             type="button"
-            title="Inserir a foto de perfil do site (configurações › URL do avatar) aqui"
+            title={t("admin.markdown.avatarTitle")}
             onClick={() => apply(`\n![avatar](${avatarUrl})\n`, "")}
             className="rounded-sm px-1.5 py-0.5 font-mono text-[10px] uppercase text-muted-foreground transition-colors hover:bg-accent hover:text-signal"
           >
-            avatar
+            {t("admin.markdown.avatar")}
           </button>
         ) : null}
         <span className="ml-auto font-mono text-[10px] text-muted-foreground">markdown</span>
@@ -489,10 +493,10 @@ export function MarkdownEditor({
       />
       <PromptDialog
         open={prompt === "code"}
-        title="Bloco de código"
-        description="Linguagem do bloco (ex: ts, python, bash). Deixe em branco para nenhuma."
+        title={t("admin.markdown.codeBlockTitle")}
+        description={t("admin.markdown.codeBlockDesc")}
         placeholder="ts"
-        confirmLabel="Inserir"
+        confirmLabel={t("admin.markdown.insert")}
         allowEmpty
         onOpenChange={(next) => setPrompt(next ? "code" : null)}
         onSubmit={(lang) => apply(`\n\`\`\`${lang}\n`, "\n```\n")}
@@ -518,6 +522,7 @@ export function RowActions({
   onDown?: (() => void) | undefined;
   onDelete?: (() => void) | undefined;
 }) {
+  const { t } = useI18n();
   const [confirmOpen, setConfirmOpen] = useState(false);
   return (
     <div className="flex items-center gap-1">
@@ -544,8 +549,8 @@ export function RowActions({
           </Button>
           <ConfirmDialog
             open={confirmOpen}
-            title="Excluir este registro?"
-            description="Esta ação não pode ser desfeita."
+            title={t("admin.kit.deleteRecordTitle")}
+            description={t("admin.kit.deleteRecordDesc")}
             onOpenChange={setConfirmOpen}
             onConfirm={onDelete}
           />
@@ -556,11 +561,12 @@ export function RowActions({
 }
 
 export function SaveBar({ onSave, children }: { onSave: () => void; children?: ReactNode }) {
+  const { t } = useI18n();
   return (
     <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
       <div className="flex items-center gap-2">{children}</div>
       <Button type="button" size="sm" className="h-9 font-mono text-xs" onClick={onSave}>
-        Salvar
+        {t("admin.kit.save")}
       </Button>
     </div>
   );

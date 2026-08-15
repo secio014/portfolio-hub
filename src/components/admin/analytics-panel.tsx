@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useI18n } from "@/lib/i18n";
 import { AdminCard, EmptyState, PanelHeader, type Row } from "./kit";
 
 type Bucket = { label: string; count: number };
@@ -18,6 +19,7 @@ function tally(rows: Row[], pick: (row: Row) => string | null) {
 }
 
 export function AnalyticsPanel() {
+  const { t } = useI18n();
   const { data: events = [] } = useQuery<Row[]>({
     queryKey: ["admin", "analytics_events"],
     queryFn: async () => {
@@ -41,7 +43,7 @@ export function AnalyticsPanel() {
   const topProjects = tally(clicks, (row) => String(row["page_or_project_id"] ?? ""));
   const topReferrers = tally(events, (row) => {
     const value = String(row["referrer"] ?? "").trim();
-    if (!value) return "direto";
+    if (!value) return t("admin.analytics.direct");
     try {
       return new URL(value).hostname;
     } catch {
@@ -51,20 +53,20 @@ export function AnalyticsPanel() {
 
   return (
     <div className="space-y-4">
-      <PanelHeader title="analytics" hint="Eventos primários, últimos 5000 registros." />
+      <PanelHeader title="analytics" hint={t("admin.analytics.hint")} />
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <Counter label="Visualizações de página" value={pageViews.length} />
-        <Counter label="Interações" value={clicks.length} />
-        <Counter label="Eventos · 7 dias" value={last7.length} />
+        <Counter label={t("admin.analytics.pageViews")} value={pageViews.length} />
+        <Counter label={t("admin.analytics.interactions")} value={clicks.length} />
+        <Counter label={t("admin.analytics.events7d")} value={last7.length} />
       </div>
 
-      {events.length === 0 ? <EmptyState label="Nenhum evento registrado ainda." /> : null}
+      {events.length === 0 ? <EmptyState label={t("admin.analytics.empty")} /> : null}
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <BarList title="Páginas mais vistas" buckets={topPages} />
-        <BarList title="Projetos mais clicados" buckets={topProjects} />
-        <BarList title="Principais referenciadores" buckets={topReferrers} />
+        <BarList title={t("admin.analytics.topPages")} buckets={topPages} />
+        <BarList title={t("admin.analytics.topProjects")} buckets={topProjects} />
+        <BarList title={t("admin.analytics.topReferrers")} buckets={topReferrers} />
       </div>
     </div>
   );
@@ -80,12 +82,13 @@ function Counter({ label, value }: { label: string; value: number }) {
 }
 
 function BarList({ title, buckets }: { title: string; buckets: Bucket[] }) {
+  const { t } = useI18n();
   const max = buckets.reduce((peak, bucket) => Math.max(peak, bucket.count), 1);
   return (
     <AdminCard>
       <p className="mono-label">{title}</p>
       {buckets.length === 0 ? (
-        <p className="font-mono text-xs text-muted-foreground">sem dados</p>
+        <p className="font-mono text-xs text-muted-foreground">{t("admin.analytics.noData")}</p>
       ) : (
         <ul className="space-y-2">
           {buckets.map((bucket) => (

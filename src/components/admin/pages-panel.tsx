@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/lib/i18n";
 import {
   AdminCard,
   EmptyState,
@@ -36,6 +37,7 @@ function nextOrder(rows: Row[]) {
  * accordion group instead of here.
  */
 export function PagesPanel({ onSelectPage }: { onSelectPage?: (slug: string) => void }) {
+  const { t } = useI18n();
   const table = useAdminTable("site_pages");
   const [promptOpen, setPromptOpen] = useState(false);
   const custom = table.rows.filter((row) => !row["is_system"]);
@@ -44,11 +46,11 @@ export function PagesPanel({ onSelectPage }: { onSelectPage?: (slug: string) => 
   function addPage(input: string) {
     const slug = slugifyPage(input);
     if (!slug) {
-      toast.error("Slug inválido");
+      toast.error(t("admin.pages.invalidSlug"));
       return;
     }
     if (table.rows.some((row) => row["slug"] === slug)) {
-      toast.error("Já existe uma página com esse slug");
+      toast.error(t("admin.pages.slugExists"));
       return;
     }
     void (async () => {
@@ -67,25 +69,25 @@ export function PagesPanel({ onSelectPage }: { onSelectPage?: (slug: string) => 
     <div className="space-y-4">
       <PanelHeader
         title="pages"
-        hint="Páginas do site. Crie uma página nova para publicar em /p/<slug> e adicioná-la automaticamente ao menu."
+        hint={t("admin.pages.hint")}
         action={
           <Button size="sm" className="h-9 font-mono text-xs" onClick={() => setPromptOpen(true)}>
-            <Plus className="size-3.5" /> Nova página
+            <Plus className="size-3.5" /> {t("admin.pages.newPage")}
           </Button>
         }
       />
       <PromptDialog
         open={promptOpen}
-        title="Nova página"
-        description="Nome da página (ex: Serviços). O endereço será gerado a partir dele."
-        placeholder="Serviços"
-        confirmLabel="Criar"
+        title={t("admin.pages.newPage")}
+        description={t("admin.pages.newPageDescription")}
+        placeholder={t("admin.pages.newPagePlaceholder")}
+        confirmLabel={t("admin.pages.create")}
         onOpenChange={setPromptOpen}
         onSubmit={addPage}
       />
 
       <div className="space-y-2">
-        <h3 className="mono-label text-signal">Páginas do sistema</h3>
+        <h3 className="mono-label text-signal">{t("admin.pages.systemPages")}</h3>
         {system.map((row) => (
           <div
             key={row["id"]}
@@ -93,15 +95,15 @@ export function PagesPanel({ onSelectPage }: { onSelectPage?: (slug: string) => 
           >
             <span>{String((row["title"] as Row)?.["pt"] ?? row["slug"])}</span>
             <span className="text-[10px] uppercase text-muted-foreground">
-              /{row["slug"] === "home" ? "" : String(row["slug"])} · fixa
+              /{row["slug"] === "home" ? "" : String(row["slug"])} · {t("admin.pages.fixed")}
             </span>
           </div>
         ))}
       </div>
 
       <div className="space-y-4">
-        <h3 className="mono-label text-signal">Páginas customizadas</h3>
-        {custom.length === 0 ? <EmptyState label="Nenhuma página customizada ainda." /> : null}
+        <h3 className="mono-label text-signal">{t("admin.pages.customPages")}</h3>
+        {custom.length === 0 ? <EmptyState label={t("admin.pages.emptyCustom")} /> : null}
         {custom.map((row, index) => (
           <PageRow
             key={row["id"]}
@@ -141,6 +143,7 @@ function PageRow({
   onUp?: (() => void) | undefined;
   onDown?: (() => void) | undefined;
 }) {
+  const { t } = useI18n();
   const [draft, setDraft] = useState<Row>(row);
   const set = (key: string, value: unknown) => setDraft((prev) => ({ ...prev, [key]: value }));
 
@@ -156,7 +159,7 @@ function PageRow({
         </button>
         <div className="flex items-center gap-2">
           <ToggleField
-            label="No menu"
+            label={t("admin.pages.inMenu")}
             checked={Boolean(draft["nav_visible"])}
             onChange={(value) => set("nav_visible", value)}
           />
@@ -164,7 +167,7 @@ function PageRow({
         </div>
       </div>
       <LocalizedField
-        label="Nome (exibido no menu)"
+        label={t("admin.pages.name")}
         editor="input"
         value={draft["title"]}
         onChange={(value) => set("title", value)}

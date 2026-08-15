@@ -2,9 +2,11 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/lib/i18n";
 import { ConfirmDialog, EmptyState, PanelHeader, type Row } from "./kit";
 
 export function MessagesPanel() {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
 
@@ -27,8 +29,11 @@ export function MessagesPanel() {
 
   return (
     <div className="space-y-4">
-      <PanelHeader title="contact_messages" hint={`${messages.length} recebida(s)`} />
-      {messages.length === 0 ? <EmptyState label="Caixa de entrada vazia." /> : null}
+      <PanelHeader
+        title="contact_messages"
+        hint={t("admin.messages.receivedCount", { count: messages.length })}
+      />
+      {messages.length === 0 ? <EmptyState label={t("admin.messages.emptyInbox")} /> : null}
       <ul className="space-y-3">
         {messages.map((message) => (
           <li key={String(message["id"])} className="panel panel-glow p-4">
@@ -50,7 +55,9 @@ export function MessagesPanel() {
                     )
                   }
                 >
-                  {message["read"] ? "marcar como não lida" : "marcar como lida"}
+                  {message["read"]
+                    ? t("admin.messages.markUnread")
+                    : t("admin.messages.markRead")}
                 </Button>
                 <Button
                   size="sm"
@@ -58,7 +65,7 @@ export function MessagesPanel() {
                   className="h-7 font-mono text-[11px] text-destructive"
                   onClick={() => setPendingDeleteId(String(message["id"]))}
                 >
-                  excluir
+                  {t("admin.messages.delete")}
                 </Button>
               </div>
             </div>
@@ -71,8 +78,8 @@ export function MessagesPanel() {
       </ul>
       <ConfirmDialog
         open={pendingDeleteId !== null}
-        title="Excluir esta mensagem?"
-        description="Esta ação não pode ser desfeita."
+        title={t("admin.messages.deleteConfirmTitle")}
+        description={t("admin.messages.deleteConfirmDesc")}
         onOpenChange={(open) => {
           if (!open) setPendingDeleteId(null);
         }}
