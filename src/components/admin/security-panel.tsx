@@ -2,6 +2,7 @@ import { useState } from "react";
 import { KeyRound, Mail, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useI18n } from "@/lib/i18n";
 import { AdminCard, PanelHeader, TextField } from "./kit";
 import { Button } from "@/components/ui/button";
 
@@ -15,6 +16,7 @@ type Step = "form" | "code";
  * Only after both pass does it call updateUser with the new password.
  */
 export function SecurityPanel() {
+  const { t } = useI18n();
   const [step, setStep] = useState<Step>("form");
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -34,24 +36,24 @@ export function SecurityPanel() {
 
   async function requestCode() {
     if (newPassword.length < 8) {
-      toast.error("A nova senha precisa ter pelo menos 8 caracteres");
+      toast.error(t("admin.security.passwordTooShort"));
       return;
     }
     if (newPassword !== confirmPassword) {
-      toast.error("As senhas novas não coincidem");
+      toast.error(t("admin.security.passwordsDontMatch"));
       return;
     }
     setPending(true);
     try {
       const { data: userData, error: userError } = await supabase.auth.getUser();
       const userEmail = userData.user?.email;
-      if (userError || !userEmail) throw new Error("Não foi possível identificar sua conta");
+      if (userError || !userEmail) throw new Error(t("admin.security.accountNotIdentified"));
 
       const { error: passwordError } = await supabase.auth.signInWithPassword({
         email: userEmail,
         password: currentPassword,
       });
-      if (passwordError) throw new Error("Senha atual incorreta");
+      if (passwordError) throw new Error(t("admin.security.wrongCurrentPassword"));
 
       const { error: otpError } = await supabase.auth.signInWithOtp({
         email: userEmail,
@@ -61,9 +63,11 @@ export function SecurityPanel() {
 
       setEmail(userEmail);
       setStep("code");
-      toast.success(`Código enviado para ${userEmail}`);
+      toast.success(t("admin.security.codeSent", { email: userEmail }));
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Falha ao iniciar verificação");
+      toast.error(
+        error instanceof Error ? error.message : t("admin.security.verificationStartFailed"),
+      );
     } finally {
       setPending(false);
     }
@@ -72,7 +76,7 @@ export function SecurityPanel() {
   async function confirmAndChange() {
     if (!email) return;
     if (code.trim().length < 6) {
-      toast.error("Informe o código de 6 dígitos enviado por e-mail");
+      toast.error(t("admin.security.enterCode"));
       return;
     }
     setPending(true);
@@ -82,15 +86,17 @@ export function SecurityPanel() {
         token: code.trim(),
         type: "email",
       });
-      if (verifyError) throw new Error("Código inválido ou expirado");
+      if (verifyError) throw new Error(t("admin.security.invalidCode"));
 
       const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
       if (updateError) throw updateError;
 
-      toast.success("Senha alterada com sucesso");
+      toast.success(t("admin.security.passwordChanged"));
       reset();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Falha ao confirmar código");
+      toast.error(
+        error instanceof Error ? error.message : t("admin.security.confirmationFailed"),
+      );
     } finally {
       setPending(false);
     }
@@ -98,32 +104,29 @@ export function SecurityPanel() {
 
   return (
     <div className="space-y-4">
-      <PanelHeader
-        title="segurança"
-        hint="Trocar senha exige a senha atual e um código de verificação enviado ao seu e-mail (2FA)."
-      />
+      <PanelHeader title={t("admin.security.title")} hint={t("admin.security.hint")} />
       <AdminCard>
         {step === "form" ? (
           <>
             <div className="flex items-center gap-2">
               <KeyRound className="size-4 text-signal" />
-              <p className="mono-label">Trocar senha</p>
+              <p className="mono-label">{t("admin.security.changePassword")}</p>
             </div>
             <div className="grid gap-4 sm:grid-cols-3">
               <TextField
-                label="Senha atual"
+                label={t("admin.security.currentPassword")}
                 type="password"
                 value={currentPassword}
                 onChange={setCurrentPassword}
               />
               <TextField
-                label="Nova senha"
+                label={t("admin.security.newPassword")}
                 type="password"
                 value={newPassword}
                 onChange={setNewPassword}
               />
               <TextField
-                label="Confirmar nova senha"
+                label={t("admin.security.confirmNewPassword")}
                 type="password"
                 value={confirmPassword}
                 onChange={setConfirmPassword}
@@ -137,17 +140,22 @@ export function SecurityPanel() {
               onClick={() => void requestCode()}
             >
               <Mail className="size-3.5" />
-              {pending ? "Enviando…" : "Enviar código de verificação"}
+              {pending ? t("admin.security.sending") : t("admin.security.sendCode")}
             </Button>
           </>
         ) : (
           <>
             <div className="flex items-center gap-2">
               <ShieldCheck className="size-4 text-signal" />
-              <p className="mono-label">Confirme o código enviado para {email}</p>
+              <p className="mono-label">{t("admin.security.confirmCodeSentTo", { email: email ?? "" })}</p>
             </div>
             <div className="max-w-[10rem]">
-              <TextField label="Código (6 dígitos)" value={code} onChange={setCode} maxLength={6} />
+              <TextField
+                label={t("admin.security.codeLabel")}
+                value={code}
+                onChange={setCode}
+                maxLength={6}
+              />
             </div>
             <div className="flex flex-wrap gap-2">
               <Button
@@ -157,7 +165,7 @@ export function SecurityPanel() {
                 disabled={pending || code.trim().length < 6}
                 onClick={() => void confirmAndChange()}
               >
-                {pending ? "Confirmando…" : "Confirmar e trocar senha"}
+                {pending ? t("admin.security.confirming") : t("admin.security.confirmAndChange")}
               </Button>
               <Button
                 type="button"
@@ -167,7 +175,7 @@ export function SecurityPanel() {
                 disabled={pending}
                 onClick={reset}
               >
-                Cancelar
+                {t("admin.kit.cancel")}
               </Button>
             </div>
           </>

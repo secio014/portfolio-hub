@@ -4,6 +4,7 @@ import { AlertTriangle, Paperclip, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getGithubSyncStatus, syncGithubData } from "@/lib/github-sync.functions";
+import { useI18n } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
 import { AdminCard, PanelHeader, SaveBar, TextField, type Row } from "./kit";
 import { TechStackPicker } from "./tech-stack-picker";
@@ -31,6 +32,7 @@ export function useSiteSettings() {
 }
 
 function useSaveSettings() {
+  const { t } = useI18n();
   const queryClient = useQueryClient();
   return async (id: string, values: Row) => {
     const { error } = await supabase
@@ -41,13 +43,14 @@ function useSaveSettings() {
       toast.error(error.message);
       return;
     }
-    toast.success("Salvo");
+    toast.success(t("admin.kit.saved"));
     void queryClient.invalidateQueries({ queryKey: ["admin", "site_settings"] });
     void queryClient.invalidateQueries({ queryKey: ["site_settings"] });
   };
 }
 
 export function SettingsPanel() {
+  const { t } = useI18n();
   const { data: settings } = useSiteSettings();
   const save = useSaveSettings();
   const queryClient = useQueryClient();
@@ -69,12 +72,12 @@ export function SettingsPanel() {
     setSyncing(true);
     try {
       const result = await syncGithubData();
-      toast.success(`${result.reposSynced} repositório(s) sincronizado(s)`);
+      toast.success(t("admin.settings.syncSuccess", { count: result.reposSynced }));
       if (result.warning) toast.warning(result.warning);
       void queryClient.invalidateQueries({ queryKey: ["github_repos_cache"] });
       void queryClient.invalidateQueries({ queryKey: ["github_activity_cache"] });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Falha ao sincronizar com o GitHub");
+      toast.error(error instanceof Error ? error.message : t("admin.settings.syncFailed"));
     } finally {
       setSyncing(false);
     }
@@ -86,29 +89,26 @@ export function SettingsPanel() {
 
   return (
     <div className="space-y-4">
-      <PanelHeader
-        title="site_settings"
-        hint="Identidade, links sociais e métricas da página inicial."
-      />
+      <PanelHeader title="site_settings" hint={t("admin.settings.hint")} />
       <AdminCard>
         <div className="grid gap-4 sm:grid-cols-2">
           <TextField
-            label="Nome do proprietário"
+            label={t("admin.settings.ownerName")}
             value={String(draft["owner_name"] ?? "")}
             onChange={(value) => set("owner_name", value)}
           />
           <TextField
-            label="E-mail"
+            label={t("admin.email")}
             value={String(draft["email"] ?? "")}
             onChange={(value) => set("email", value)}
           />
           <TextField
-            label="Usuário do GitHub"
+            label={t("admin.settings.githubUsername")}
             value={String(draft["github_username"] ?? "")}
             onChange={(value) => set("github_username", value)}
           />
           <TextField
-            label="Organização do GitHub"
+            label={t("admin.settings.githubOrg")}
             value={String(draft["github_org"] ?? "")}
             onChange={(value) => set("github_org", value)}
           />
@@ -116,8 +116,7 @@ export function SettingsPanel() {
 
         <div className="flex items-center justify-between gap-3 rounded-md border border-border p-3">
           <p className="font-mono text-[11px] text-muted-foreground">
-            Puxa repositórios públicos e atividade de contribuição do GitHub para os blocos da home.
-            Salve o usuário/organização acima antes de sincronizar.
+            {t("admin.settings.syncHint")}
           </p>
           <Button
             type="button"
@@ -128,7 +127,7 @@ export function SettingsPanel() {
             onClick={() => void handleSync()}
           >
             <RefreshCw className={`size-3.5 ${syncing ? "animate-spin" : ""}`} />
-            {syncing ? "Sincronizando…" : "Sincronizar GitHub"}
+            {syncing ? t("admin.settings.syncing") : t("admin.settings.syncButton")}
           </Button>
         </div>
 
@@ -137,15 +136,12 @@ export function SettingsPanel() {
             <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warn" />
             <div className="space-y-1">
               <p className="font-mono text-[11px] font-semibold text-warn">
-                GITHUB_TOKEN não configurado no servidor
+                {t("admin.settings.noTokenTitle")}
               </p>
               <p className="font-mono text-[11px] text-muted-foreground">
-                Sem o token, a sincronização ainda busca repositórios públicos (com limite de taxa
-                mais baixo), mas o gráfico de contribuições fica vazio — ele exige a API GraphQL
-                autenticada do GitHub. Gere um personal access token e adicione{" "}
-                <code className="rounded-sm bg-muted px-1 py-0.5">GITHUB_TOKEN</code> nas variáveis
-                de ambiente do servidor (.env local e/ou painel de deploy), depois reinicie o
-                servidor.
+                {t("admin.settings.noTokenDescBefore")}{" "}
+                <code className="rounded-sm bg-muted px-1 py-0.5">GITHUB_TOKEN</code>{" "}
+                {t("admin.settings.noTokenDescAfter")}
               </p>
             </div>
           </div>
@@ -154,20 +150,20 @@ export function SettingsPanel() {
           <div className="flex items-start gap-2.5 rounded-md border border-warn/40 bg-warn/10 p-3">
             <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warn" />
             <p className="font-mono text-[11px] text-muted-foreground">
-              Defina o "Usuário do GitHub" acima e salve antes de sincronizar.
+              {t("admin.settings.usernameMissing")}
             </p>
           </div>
         ) : null}
 
         <div className="grid gap-4 sm:grid-cols-2">
           <TextField
-            label="URL do LinkedIn"
+            label={t("admin.settings.linkedinUrl")}
             value={String(draft["linkedin_url"] ?? "")}
             onChange={(value) => set("linkedin_url", value)}
           />
           <div className="space-y-1.5">
             <TextField
-              label="URL do avatar"
+              label={t("admin.settings.avatarUrl")}
               value={String(draft["avatar_url"] ?? "")}
               onChange={(value) => set("avatar_url", value)}
             />
@@ -179,7 +175,7 @@ export function SettingsPanel() {
                 className="h-8 font-mono text-[11px]"
                 onClick={() => setAvatarPickerOpen(true)}
               >
-                <Paperclip className="size-3" /> Anexar arquivo ou buscar GIF
+                <Paperclip className="size-3" /> {t("admin.settings.attachOrSearchGif")}
               </Button>
               {draft["avatar_url"] ? (
                 <img
@@ -204,7 +200,7 @@ export function SettingsPanel() {
           {["projects", "technologies", "years"].map((key) => (
             <TextField
               key={key}
-              label={`Métrica · ${key}`}
+              label={t("admin.settings.metricLabel", { key })}
               type="number"
               value={String(metrics[key] ?? "")}
               onChange={(value) => set("metrics", { ...metrics, [key]: Number(value) || 0 })}

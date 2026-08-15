@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { projectLabelsQuery, reposQuery } from "@/lib/queries";
-import { localized } from "@/lib/i18n";
+import { localized, useI18n } from "@/lib/i18n";
 import { generateProjectSummary } from "@/lib/project-summary.functions";
 import {
   AdminCard,
@@ -56,6 +56,7 @@ function mergeGithubRow(repo: Row, override: Row | undefined, labelsByKey: Map<s
 }
 
 export function ProjectsPanel() {
+  const { t } = useI18n();
   const manualTable = useAdminTable("projects");
   const { data: repoCache = [] } = useQuery(reposQuery);
   const { data: labels = [] } = useQuery(projectLabelsQuery);
@@ -107,7 +108,7 @@ export function ProjectsPanel() {
     <div className="space-y-4">
       <PanelHeader
         title="projects"
-        hint="Repositórios sincronizados do GitHub mantêm os campos remotos somente leitura; projetos manuais são totalmente editáveis. As categorias (produção/estudo/experimento) são gerenciadas em geral › rótulos de projeto."
+        hint={t("admin.projects.hint")}
         action={
           <Button
             size="sm"
@@ -121,7 +122,7 @@ export function ProjectsPanel() {
               })
             }
           >
-            <Plus className="size-3.5" /> Adicionar projeto
+            <Plus className="size-3.5" /> {t("admin.projects.addProject")}
           </Button>
         }
       />
@@ -129,7 +130,7 @@ export function ProjectsPanel() {
       {featuredItems.length > 0 ? <FeaturedPicker items={featuredItems} /> : null}
 
       {manual.length === 0 && repoCache.length === 0 ? (
-        <EmptyState label="Nenhum projeto ainda." />
+        <EmptyState label={t("admin.projects.empty")} />
       ) : null}
 
       {manual.map((row, index) => (
@@ -155,7 +156,7 @@ export function ProjectsPanel() {
       {repoCache.length > 0 ? (
         <div className="space-y-4 pt-4">
           <h3 className="mono-label flex items-center gap-2">
-            <Github className="size-3.5" /> Sincronizado do GitHub
+            <Github className="size-3.5" /> {t("admin.projects.syncedFromGithub")}
           </h3>
           {repoCache.map((repo) => (
             <ProjectRow
@@ -190,6 +191,7 @@ type FeaturedItem = {
  * full editor. The home shows the first 6 marked as featured.
  */
 function FeaturedPicker({ items }: { items: FeaturedItem[] }) {
+  const { t } = useI18n();
   const featuredCount = items.filter((item) => item.featured).length;
   const sorted = [...items].sort((a, b) => {
     const featuredDiff = Number(b.featured) - Number(a.featured);
@@ -201,10 +203,12 @@ function FeaturedPicker({ items }: { items: FeaturedItem[] }) {
     <AdminCard>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="mono-label flex items-center gap-1.5">
-          <Star className="size-3.5 text-signal" /> projetos em destaque
+          <Star className="size-3.5 text-signal" /> {t("admin.projects.featuredProjects")}
         </p>
         <span className="font-mono text-[11px] text-muted-foreground">
-          {featuredCount} selecionado{featuredCount === 1 ? "" : "s"} · a home mostra até 6
+          {featuredCount === 1
+            ? t("admin.projects.selectedCountSingular", { count: featuredCount })
+            : t("admin.projects.selectedCountPlural", { count: featuredCount })}
         </span>
       </div>
       <ul className="grid gap-1.5 sm:grid-cols-2">
@@ -241,6 +245,7 @@ function ProjectRow({
   onDown?: (() => void) | undefined;
   readOnlyRemote?: boolean;
 }) {
+  const { t } = useI18n();
   const [draft, setDraft] = useState<Row>(row);
   // `row` is a fresh object every render for GitHub-synced repos
   // (mergeGithubRow() rebuilds it each time, including on unrelated
@@ -272,12 +277,12 @@ function ProjectRow({
       });
       if (summary) {
         set("description", summary);
-        toast.success("Descrição gerada — clique em Salvar para aplicar.");
+        toast.success(t("admin.projects.descriptionGenerated"));
       } else if (summaryError) {
         toast.warning(summaryError);
       }
     } catch (err) {
-      toast.error((err as Error).message || "Falha ao gerar descrição");
+      toast.error((err as Error).message || t("admin.projects.generateFailed"));
     } finally {
       setGenerating(false);
     }
@@ -291,7 +296,7 @@ function ProjectRow({
         </p>
         <div className="flex items-center gap-3">
           <ToggleField
-            label="Visível"
+            label={t("admin.content.visible")}
             checked={Boolean(draft["visible"])}
             onChange={(value) => {
               set("visible", value);
@@ -304,12 +309,12 @@ function ProjectRow({
 
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="space-y-1.5">
-          <span className="mono-label">Rótulo</span>
+          <span className="mono-label">{t("admin.projects.label")}</span>
           <SelectField
             value={String(draft["label_id"] ?? "")}
             onChange={(value) => set("label_id", value || null)}
           >
-            <option value="">sem rótulo</option>
+            <option value="">{t("admin.projects.noLabel")}</option>
             {labels.map((label) => (
               <option key={label["id"]} value={label["id"]}>
                 {String((label["name"] as Row)?.["pt"] ?? label["key"] ?? label["id"])}
@@ -318,13 +323,13 @@ function ProjectRow({
           </SelectField>
         </div>
         <TextField
-          label="Ordem"
+          label={t("admin.projects.order")}
           type="number"
           value={String(draft["order"] ?? 0)}
           onChange={(value) => set("order", Number(value) || 0)}
         />
         <TextField
-          label="Slug"
+          label={t("admin.writing.slug")}
           value={String(draft["slug"] ?? "")}
           disabled={readOnlyRemote}
           onChange={(value) => set("slug", value)}
@@ -333,30 +338,30 @@ function ProjectRow({
 
       {readOnlyRemote ? (
         <p className="font-mono text-[11px] text-muted-foreground">
-          repo: {String(draft["repo_url"] ?? "—")} · título e tecnologias vêm do GitHub.
+          {t("admin.projects.repoReadOnly", { url: String(draft["repo_url"] ?? "—") })}
         </p>
       ) : (
         <>
           <LocalizedField
-            label="Título"
+            label={t("admin.content.title")}
             editor="input"
             value={draft["title"]}
             onChange={(value) => set("title", value)}
           />
           <div className="grid gap-4 sm:grid-cols-2">
             <TextField
-              label="URL do repositório"
+              label={t("admin.projects.repoUrl")}
               value={String(draft["repo_url"] ?? "")}
               onChange={(value) => set("repo_url", value)}
             />
             <TextField
-              label="URL da demo"
+              label={t("admin.projects.demoUrl")}
               value={String(draft["demo_url"] ?? "")}
               onChange={(value) => set("demo_url", value)}
             />
           </div>
           <TextField
-            label="Tecnologias (separadas por vírgula)"
+            label={t("admin.projects.techList")}
             value={tech}
             onChange={(value) =>
               set(
@@ -373,7 +378,7 @@ function ProjectRow({
 
       <div className="space-y-1.5">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="mono-label">Descrição</span>
+          <span className="mono-label">{t("admin.projects.description")}</span>
           <Button
             type="button"
             variant="outline"
@@ -382,7 +387,8 @@ function ProjectRow({
             disabled={generating}
             onClick={() => void handleGenerate()}
           >
-            <Sparkles className="size-3" /> {generating ? "Gerando…" : "Gerar via IA"}
+            <Sparkles className="size-3" />{" "}
+            {generating ? t("admin.projects.generating") : t("admin.projects.generateViaAI")}
           </Button>
         </div>
         <LocalizedField
@@ -395,7 +401,7 @@ function ProjectRow({
       </div>
 
       <LocalizedField
-        label="Resumo rápido (exibido em destaque no modal do projeto, opcional)"
+        label={t("admin.projects.quickSummary")}
         editor="textarea"
         rows={2}
         value={draft["summary"]}

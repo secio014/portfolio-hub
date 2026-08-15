@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { useI18n, type TranslationKey } from "@/lib/i18n";
 import {
   AdminCard,
   ConfirmDialog,
@@ -20,10 +21,10 @@ import {
   type Row,
 } from "./kit";
 
-const LAYOUTS: { value: string; label: string }[] = [
-  { value: "vertical", label: "Vertical (empilhado)" },
-  { value: "horizontal", label: "Horizontal (grade automática)" },
-  { value: "carousel", label: "Carrossel" },
+const LAYOUTS: { value: string; labelKey: TranslationKey }[] = [
+  { value: "vertical", labelKey: "admin.content.layoutVertical" },
+  { value: "horizontal", labelKey: "admin.content.layoutHorizontal" },
+  { value: "carousel", labelKey: "admin.content.layoutCarousel" },
 ];
 
 function useDraft(row: Row) {
@@ -39,12 +40,12 @@ function nextOrder(rows: Row[]) {
 
 /* ------------------------------- Sections -------------------------------- */
 
-const BLOCK_SECTION_LABELS: Record<string, string> = {
-  activity: "Atividade no GitHub",
-  stack: "Stack técnica",
-  featured: "Projetos em destaque",
-  testimonials: "Depoimentos",
-  blog: "Artigos recentes",
+const BLOCK_SECTION_LABEL_KEYS: Record<string, TranslationKey> = {
+  activity: "admin.content.blockActivity",
+  stack: "admin.content.blockStack",
+  featured: "admin.content.blockFeatured",
+  testimonials: "admin.content.blockTestimonials",
+  blog: "admin.content.blockBlog",
 };
 
 function slugifySectionKey(input: string) {
@@ -56,6 +57,7 @@ function slugifySectionKey(input: string) {
 }
 
 export function SectionsPanel({ pageSlug }: { pageSlug: string }) {
+  const { t } = useI18n();
   const table = useAdminTable("site_sections");
   const pages = useAdminTable("site_pages");
   const blocksTable = useAdminTable("section_blocks");
@@ -67,11 +69,11 @@ export function SectionsPanel({ pageSlug }: { pageSlug: string }) {
   function addSection(input: string) {
     const section_key = slugifySectionKey(input);
     if (!section_key) {
-      toast.error("Chave inválida");
+      toast.error(t("admin.content.invalidKey"));
       return;
     }
     if (table.rows.some((row) => row["section_key"] === section_key)) {
-      toast.error("Já existe uma seção com essa chave");
+      toast.error(t("admin.content.keyExists"));
       return;
     }
     table.insert({
@@ -90,10 +92,10 @@ export function SectionsPanel({ pageSlug }: { pageSlug: string }) {
       .eq("page_slug", pageSlug)
       .eq("type", "custom");
     if (error) {
-      toast.error(error.message ?? "Falha ao excluir seções");
+      toast.error(error.message ?? t("admin.content.deleteSectionsFailed"));
       return;
     }
-    toast.success("Seções e divs excluídas");
+    toast.success(t("admin.content.sectionsDeleted"));
     table.refresh();
     blocksTable.refresh();
   }
@@ -102,7 +104,7 @@ export function SectionsPanel({ pageSlug }: { pageSlug: string }) {
     <div className="space-y-4">
       <PanelHeader
         title="sections"
-        hint="Blocos de texto exibidos nesta página. Edite por idioma, reordene, oculte ou mova para outra página. O corpo suporta markdown (blocos de código, links, vídeos/imagens)."
+        hint={t("admin.content.sectionsHint")}
         action={
           <div className="flex gap-2">
             {customRows.length > 0 ? (
@@ -112,33 +114,33 @@ export function SectionsPanel({ pageSlug }: { pageSlug: string }) {
                 className="h-9 font-mono text-xs text-destructive hover:bg-destructive/10"
                 onClick={() => setConfirmClearOpen(true)}
               >
-                <Trash2 className="size-3.5" /> Excluir todas as seções custom
+                <Trash2 className="size-3.5" /> {t("admin.content.deleteAllCustom")}
               </Button>
             ) : null}
             <Button size="sm" className="h-9 font-mono text-xs" onClick={() => setPromptOpen(true)}>
-              <Plus className="size-3.5" /> Adicionar seção
+              <Plus className="size-3.5" /> {t("admin.content.addSection")}
             </Button>
           </div>
         }
       />
       <PromptDialog
         open={promptOpen}
-        title="Nova seção"
-        description="Chave da seção (ex: cta-newsletter). Usada internamente, não aparece no site."
+        title={t("admin.content.newSection")}
+        description={t("admin.content.newSectionDescription")}
         placeholder="cta-newsletter"
-        confirmLabel="Criar"
+        confirmLabel={t("admin.pages.create")}
         onOpenChange={setPromptOpen}
         onSubmit={addSection}
       />
       <ConfirmDialog
         open={confirmClearOpen}
-        title={`Excluir ${customRows.length} seção(ões) custom desta página?`}
-        description="Remove todas as seções custom desta página e as divs dentro delas. Seções fixas (hero, sobre, contato, blocos da home) não são afetadas. Esta ação não pode ser desfeita."
-        confirmLabel="Excluir tudo"
+        title={t("admin.content.deleteCustomTitle", { count: customRows.length })}
+        description={t("admin.content.deleteCustomDescription")}
+        confirmLabel={t("admin.content.deleteAll")}
         onOpenChange={setConfirmClearOpen}
         onConfirm={() => void clearCustomSections()}
       />
-      {rows.length === 0 ? <EmptyState label="Nenhuma seção nesta página ainda." /> : null}
+      {rows.length === 0 ? <EmptyState label={t("admin.content.emptySections")} /> : null}
       {rows.map((row, index) => (
         <SectionRow
           key={row["id"]}
@@ -183,24 +185,27 @@ function SectionRow({
   onUp?: (() => void) | undefined;
   onDown?: (() => void) | undefined;
 }) {
+  const { t } = useI18n();
   const { draft, set } = useDraft(row);
   const isCustom = row["type"] === "custom";
   const isBlock = row["type"] === "block";
   const sectionKey = String(row["section_key"] ?? "");
-  const blockLabel = BLOCK_SECTION_LABELS[sectionKey];
+  const blockLabelKey = BLOCK_SECTION_LABEL_KEYS[sectionKey];
 
   if (isBlock) {
     return (
       <AdminCard>
         <div className="flex items-center justify-between gap-2">
           <div>
-            <p className="font-mono text-xs text-signal">{blockLabel ?? sectionKey}</p>
+            <p className="font-mono text-xs text-signal">
+              {blockLabelKey ? t(blockLabelKey) : sectionKey}
+            </p>
             <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">
-              Bloco fixo ({sectionKey}) · não pode ser removido nem movido, apenas ocultado.
+              {t("admin.content.fixedBlock", { key: sectionKey })}
             </p>
           </div>
           <ToggleField
-            label="Visível"
+            label={t("admin.content.visible")}
             checked={Boolean(draft["visible"])}
             onChange={(value) => {
               set("visible", value);
@@ -225,7 +230,7 @@ function SectionRow({
         </p>
         <div className="flex items-center gap-2">
           <ToggleField
-            label="Visível"
+            label={t("admin.content.visible")}
             checked={Boolean(draft["visible"])}
             onChange={(value) => {
               set("visible", value);
@@ -237,7 +242,7 @@ function SectionRow({
       </div>
       {isCustom && pages.length > 0 ? (
         <div className="space-y-1.5">
-          <span className="mono-label">Página</span>
+          <span className="mono-label">{t("admin.labels.page")}</span>
           <SelectField
             value={String(row["page_slug"] ?? "home")}
             onChange={onMove}
@@ -252,27 +257,26 @@ function SectionRow({
         </div>
       ) : null}
       <LocalizedField
-        label="Título"
+        label={t("admin.content.title")}
         editor="input"
         value={draft["title"]}
         onChange={(value) => set("title", value)}
       />
       <LocalizedField
-        label="Subtítulo"
+        label={t("admin.content.subtitle")}
         editor="input"
         value={draft["subtitle"]}
         onChange={(value) => set("subtitle", value)}
       />
       <LocalizedField
-        label="Corpo"
+        label={t("admin.content.body")}
         editor="markdown"
         rows={8}
         value={draft["body"]}
         onChange={(value) => set("body", value)}
       />
       <p className="font-mono text-[11px] text-muted-foreground">
-        Use os botões "imagem" e "vídeo" da barra de markdown para colar um link (YouTube, TikTok,
-        Instagram ou direto) ou enviar um arquivo.
+        {t("admin.content.markdownHint")}
       </p>
       <SaveBar
         onSave={() =>
@@ -314,6 +318,7 @@ function SectionBlocksManager({
   layout: string;
   onLayoutChange: (value: string) => void;
 }) {
+  const { t } = useI18n();
   const blocks = blocksTable.rows
     .filter((block) => block["section_id"] === sectionId)
     .sort((a, b) => Number(a["order"] ?? 0) - Number(b["order"] ?? 0));
@@ -321,7 +326,7 @@ function SectionBlocksManager({
   return (
     <div className="space-y-3 border-t border-border pt-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <span className="mono-label">Divs ({blocks.length})</span>
+        <span className="mono-label">{t("admin.content.divsCount", { count: blocks.length })}</span>
         <Button
           type="button"
           size="sm"
@@ -329,16 +334,16 @@ function SectionBlocksManager({
           className="h-8 font-mono text-xs"
           onClick={() => blocksTable.insert({ section_id: sectionId, order: nextOrder(blocks) })}
         >
-          <Plus className="size-3.5" /> Adicionar div
+          <Plus className="size-3.5" /> {t("admin.content.addDiv")}
         </Button>
       </div>
       {blocks.length > 1 ? (
         <div className="space-y-1.5">
-          <span className="mono-label">Layout</span>
+          <span className="mono-label">{t("admin.content.layout")}</span>
           <SelectField value={layout} onChange={onLayoutChange} className="sm:w-64">
             {LAYOUTS.map((option) => (
               <option key={option.value} value={option.value}>
-                {option.label}
+                {t(option.labelKey)}
               </option>
             ))}
           </SelectField>
@@ -379,25 +384,28 @@ function SectionBlockRow({
   onUp?: (() => void) | undefined;
   onDown?: (() => void) | undefined;
 }) {
+  const { t } = useI18n();
   const { draft, set } = useDraft(block);
   return (
     <div className="space-y-3 rounded-md border border-border p-3">
       <div className="flex items-center justify-between gap-2">
         <span className="font-mono text-[11px] text-muted-foreground">
           {String(
-            (draft["title"] as Row)?.["pt"] || (draft["title"] as Row)?.["en"] || "sem título",
+            (draft["title"] as Row)?.["pt"] ||
+              (draft["title"] as Row)?.["en"] ||
+              t("admin.content.untitled"),
           )}
         </span>
         <RowActions onUp={onUp} onDown={onDown} onDelete={onDelete} />
       </div>
       <LocalizedField
-        label="Título"
+        label={t("admin.content.title")}
         editor="input"
         value={draft["title"]}
         onChange={(value) => set("title", value)}
       />
       <LocalizedField
-        label="Corpo"
+        label={t("admin.content.body")}
         editor="markdown"
         rows={4}
         value={draft["body"]}
@@ -410,17 +418,18 @@ function SectionBlockRow({
 
 /* ------------------------------- Timeline -------------------------------- */
 
-const TIMELINE_TYPES = [
-  { value: "work", label: "Experiência profissional" },
-  { value: "study", label: "Formação acadêmica" },
-] as const;
+const TIMELINE_TYPES: { value: "work" | "study"; labelKey: TranslationKey }[] = [
+  { value: "work", labelKey: "admin.content.timelineWork" },
+  { value: "study", labelKey: "admin.content.timelineStudy" },
+];
 
 export function TimelinePanel() {
+  const { t } = useI18n();
   const table = useAdminTable("career_timeline");
 
   function addEntry(type: "work" | "study") {
     table.insert({
-      institution: "Nova entrada",
+      institution: t("admin.content.newEntry"),
       type,
       start_date: new Date().toISOString().slice(0, 10),
       order: nextOrder(table.rows),
@@ -431,7 +440,7 @@ export function TimelinePanel() {
     <div className="space-y-4">
       <PanelHeader
         title="career_timeline"
-        hint="Formação acadêmica e experiência profissional exibidas na página Sobre."
+        hint={t("admin.content.timelineHint")}
         action={
           <div className="flex gap-2">
             <Button
@@ -440,23 +449,23 @@ export function TimelinePanel() {
               className="h-9 font-mono text-xs"
               onClick={() => addEntry("study")}
             >
-              <Plus className="size-3.5" /> Formação
+              <Plus className="size-3.5" /> {t("admin.content.timelineStudy")}
             </Button>
             <Button size="sm" className="h-9 font-mono text-xs" onClick={() => addEntry("work")}>
-              <Plus className="size-3.5" /> Experiência
+              <Plus className="size-3.5" /> {t("admin.content.timelineWork")}
             </Button>
           </div>
         }
       />
       {table.rows.length === 0 ? (
-        <EmptyState label="Nenhuma entrada na linha do tempo ainda." />
+        <EmptyState label={t("admin.content.emptyTimeline")} />
       ) : null}
       {TIMELINE_TYPES.map((group) => {
         const rows = table.rows.filter((row) => (row["type"] ?? "work") === group.value);
         if (rows.length === 0) return null;
         return (
           <div key={group.value} className="space-y-4">
-            <h3 className="mono-label text-signal">{group.label}</h3>
+            <h3 className="mono-label text-signal">{t(group.labelKey)}</h3>
             {rows.map((row) => {
               const index = table.rows.indexOf(row);
               return (
@@ -500,6 +509,7 @@ function TimelineRow({
   onUp?: (() => void) | undefined;
   onDown?: (() => void) | undefined;
 }) {
+  const { t } = useI18n();
   const { draft, set } = useDraft(row);
   return (
     <AdminCard>
@@ -507,7 +517,7 @@ function TimelineRow({
         <p className="font-mono text-xs text-signal">{String(draft["institution"] ?? "")}</p>
         <div className="flex items-center gap-2">
           <ToggleField
-            label="Visível"
+            label={t("admin.content.visible")}
             checked={Boolean(draft["visible"])}
             onChange={(value) => {
               set("visible", value);
@@ -519,47 +529,49 @@ function TimelineRow({
       </div>
       <div className="grid gap-4 sm:grid-cols-4">
         <div className="space-y-1.5">
-          <span className="mono-label">Tipo</span>
+          <span className="mono-label">{t("admin.content.type")}</span>
           <SelectField
             value={String(draft["type"] ?? "work")}
             onChange={(value) => set("type", value)}
           >
             {TIMELINE_TYPES.map((entry) => (
               <option key={entry.value} value={entry.value}>
-                {entry.label}
+                {t(entry.labelKey)}
               </option>
             ))}
           </SelectField>
         </div>
         <TextField
-          label="Instituição"
+          label={t("admin.content.institution")}
           value={String(draft["institution"] ?? "")}
           onChange={(value) => set("institution", value)}
         />
         <TextField
-          label="Data de início"
+          label={t("admin.content.startDate")}
           type="date"
           value={String(draft["start_date"] ?? "")}
           onChange={(value) => set("start_date", value)}
         />
         <div className="space-y-1.5">
           <TextField
-            label="Data de término"
+            label={t("admin.content.endDate")}
             type="date"
             value={String(draft["end_date"] ?? "")}
             onChange={(value) => set("end_date", value)}
           />
-          <p className="font-mono text-[10px] text-muted-foreground">Vazio = atual</p>
+          <p className="font-mono text-[10px] text-muted-foreground">
+            {t("admin.content.emptyMeansPresent")}
+          </p>
         </div>
       </div>
       <LocalizedField
-        label="Título"
+        label={t("admin.content.title")}
         editor="input"
         value={draft["title"]}
         onChange={(value) => set("title", value)}
       />
       <LocalizedField
-        label="Descrição"
+        label={t("admin.content.description")}
         editor="markdown"
         rows={3}
         value={draft["description"]}
@@ -585,26 +597,30 @@ function TimelineRow({
 /* ---------------------------- Certifications ------------------------------ */
 
 export function CertificationsPanel() {
+  const { t } = useI18n();
   const table = useAdminTable("certifications");
 
   return (
     <div className="space-y-4">
       <PanelHeader
         title="certifications"
-        hint="Cursos, certificados e credenciais."
+        hint={t("admin.content.certificationsHint")}
         action={
           <Button
             size="sm"
             className="h-9 font-mono text-xs"
             onClick={() =>
-              table.insert({ name: "Nova certificação", order: nextOrder(table.rows) })
+              table.insert({
+                name: t("admin.content.newCertification"),
+                order: nextOrder(table.rows),
+              })
             }
           >
-            <Plus className="size-3.5" /> Adicionar certificação
+            <Plus className="size-3.5" /> {t("admin.content.addCertification")}
           </Button>
         }
       />
-      {table.rows.length === 0 ? <EmptyState label="Nenhuma certificação ainda." /> : null}
+      {table.rows.length === 0 ? <EmptyState label={t("admin.content.emptyCertifications")} /> : null}
       {table.rows.map((row, index) => (
         <CertificationRow
           key={row["id"]}
@@ -640,6 +656,7 @@ function CertificationRow({
   onUp?: (() => void) | undefined;
   onDown?: (() => void) | undefined;
 }) {
+  const { t } = useI18n();
   const { draft, set } = useDraft(row);
   return (
     <AdminCard>
@@ -647,7 +664,7 @@ function CertificationRow({
         <p className="font-mono text-xs text-signal">{String(draft["name"] ?? "")}</p>
         <div className="flex items-center gap-2">
           <ToggleField
-            label="Visível"
+            label={t("admin.content.visible")}
             checked={Boolean(draft["visible"])}
             onChange={(value) => {
               set("visible", value);
@@ -659,23 +676,23 @@ function CertificationRow({
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <TextField
-          label="Nome"
+          label={t("admin.content.name")}
           value={String(draft["name"] ?? "")}
           onChange={(value) => set("name", value)}
         />
         <TextField
-          label="Emissor"
+          label={t("admin.content.issuer")}
           value={String(draft["issuer"] ?? "")}
           onChange={(value) => set("issuer", value)}
         />
         <TextField
-          label="Data"
+          label={t("admin.content.date")}
           type="date"
           value={String(draft["date"] ?? "")}
           onChange={(value) => set("date", value)}
         />
         <TextField
-          label="URL da credencial"
+          label={t("admin.content.credentialUrl")}
           value={String(draft["credential_url"] ?? "")}
           onChange={(value) => set("credential_url", value)}
         />
@@ -698,26 +715,30 @@ function CertificationRow({
 /* ----------------------------- Testimonials ------------------------------- */
 
 export function TestimonialsPanel() {
+  const { t } = useI18n();
   const table = useAdminTable("testimonials");
 
   return (
     <div className="space-y-4">
       <PanelHeader
         title="testimonials"
-        hint="Depoimentos de clientes e colegas."
+        hint={t("admin.content.testimonialsHint")}
         action={
           <Button
             size="sm"
             className="h-9 font-mono text-xs"
             onClick={() =>
-              table.insert({ author_name: "Novo autor", order: nextOrder(table.rows) })
+              table.insert({
+                author_name: t("admin.content.newAuthor"),
+                order: nextOrder(table.rows),
+              })
             }
           >
-            <Plus className="size-3.5" /> Adicionar depoimento
+            <Plus className="size-3.5" /> {t("admin.content.addTestimonial")}
           </Button>
         }
       />
-      {table.rows.length === 0 ? <EmptyState label="Nenhum depoimento ainda." /> : null}
+      {table.rows.length === 0 ? <EmptyState label={t("admin.content.emptyTestimonials")} /> : null}
       {table.rows.map((row, index) => (
         <TestimonialRow
           key={row["id"]}
@@ -753,6 +774,7 @@ function TestimonialRow({
   onUp?: (() => void) | undefined;
   onDown?: (() => void) | undefined;
 }) {
+  const { t } = useI18n();
   const { draft, set } = useDraft(row);
   return (
     <AdminCard>
@@ -760,7 +782,7 @@ function TestimonialRow({
         <p className="font-mono text-xs text-signal">{String(draft["author_name"] ?? "")}</p>
         <div className="flex items-center gap-2">
           <ToggleField
-            label="Visível"
+            label={t("admin.content.visible")}
             checked={Boolean(draft["visible"])}
             onChange={(value) => {
               set("visible", value);
@@ -771,18 +793,18 @@ function TestimonialRow({
         </div>
       </div>
       <TextField
-        label="Nome do autor"
+        label={t("admin.content.authorName")}
         value={String(draft["author_name"] ?? "")}
         onChange={(value) => set("author_name", value)}
       />
       <LocalizedField
-        label="Cargo do autor"
+        label={t("admin.content.authorRole")}
         editor="input"
         value={draft["author_role"]}
         onChange={(value) => set("author_role", value)}
       />
       <LocalizedField
-        label="Depoimento"
+        label={t("admin.content.quote")}
         editor="markdown"
         rows={4}
         value={draft["quote"]}

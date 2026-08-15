@@ -3,6 +3,7 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { useI18n } from "@/lib/i18n";
 import {
   LABEL_COLORS,
   LABEL_SWATCH_CLASSES,
@@ -36,25 +37,26 @@ function nextOrder(rows: Row[]) {
 }
 
 export function ProjectLabelsPanel() {
+  const { t } = useI18n();
   const table = useAdminTable("project_labels");
   const rows = table.rows;
 
   return (
     <div className="space-y-4">
       <PanelHeader
-        title="rótulos de projeto"
-        hint="As categorias que aparecem como badge nos cards de projeto (ex: Produção, Estudo, Experimento). Renomeie, recolora, reordene ou crie novas."
+        title={t("admin.nav.projectLabels")}
+        hint={t("admin.projectLabels.hint")}
         action={
           <Button
             size="sm"
             className="h-9 font-mono text-xs"
             onClick={() => table.insert({ color: "signal", order: nextOrder(rows) })}
           >
-            <Plus className="size-3.5" /> Adicionar rótulo
+            <Plus className="size-3.5" /> {t("admin.projectLabels.addButton")}
           </Button>
         }
       />
-      {rows.length === 0 ? <EmptyState label="Nenhum rótulo ainda." /> : null}
+      {rows.length === 0 ? <EmptyState label={t("admin.projectLabels.empty")} /> : null}
       {rows.map((row, index) => (
         <LabelRow
           key={row["id"]}
@@ -90,6 +92,7 @@ function LabelRow({
   onUp?: (() => void) | undefined;
   onDown?: (() => void) | undefined;
 }) {
+  const { t } = useI18n();
   const { draft, set } = useDraft(row);
   const name = String((draft["name"] as Row)?.["pt"] || (draft["name"] as Row)?.["en"] || "");
   const color = String(draft["color"] ?? "signal");
@@ -108,12 +111,12 @@ function LabelRow({
           className={`font-mono text-[10px] ${labelColorClass(color)}`}
           style={labelColorStyle(color)}
         >
-          {name || "novo rótulo"}
+          {name || t("admin.projectLabels.newLabel")}
         </Badge>
         <RowActions onUp={onUp} onDown={onDown} onDelete={onDelete} />
       </div>
       <div className="space-y-1.5">
-        <span className="mono-label">Cor</span>
+        <span className="mono-label">{t("admin.projectLabels.color")}</span>
         <div className="flex flex-wrap items-center gap-2">
           {LABEL_COLORS.map((option) => (
             <button
@@ -130,7 +133,7 @@ function LabelRow({
             </button>
           ))}
           <label
-            title="Cor personalizada"
+            title={t("admin.projectLabels.customColor")}
             className={`relative size-8 shrink-0 cursor-pointer overflow-hidden rounded-full border-2 transition-transform ${
               isCustom ? "scale-110 border-foreground" : "border-transparent"
             }`}
@@ -140,7 +143,7 @@ function LabelRow({
                 : { background: "conic-gradient(red, yellow, lime, cyan, blue, magenta, red)" }
             }
           >
-            <span className="sr-only">Cor personalizada</span>
+            <span className="sr-only">{t("admin.projectLabels.customColor")}</span>
             <input
               type="color"
               value={isCustom ? color : hexInput}
@@ -165,7 +168,7 @@ function LabelRow({
         </div>
       </div>
       <LocalizedField
-        label="Nome"
+        label={t("admin.projectLabels.name")}
         editor="input"
         value={draft["name"]}
         onChange={(value) => set("name", value)}

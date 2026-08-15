@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useI18n } from "@/lib/i18n";
 import {
   AdminCard,
   EmptyState,
@@ -36,13 +37,14 @@ function textToTags(value: string) {
 /* --------------------------------- Blog ---------------------------------- */
 
 export function BlogPanel() {
+  const { t } = useI18n();
   const table = useAdminTable("blog_posts", "published_at", false);
 
   return (
     <div className="space-y-4">
       <PanelHeader
         title="blog_posts"
-        hint="Escreva, publique e despublique artigos. O conteúdo suporta markdown."
+        hint={t("admin.writing.blogHint")}
         action={
           <Button
             size="sm"
@@ -55,11 +57,11 @@ export function BlogPanel() {
               })
             }
           >
-            <Plus className="size-3.5" /> Novo post
+            <Plus className="size-3.5" /> {t("admin.writing.newPost")}
           </Button>
         }
       />
-      {table.rows.length === 0 ? <EmptyState label="Nenhum post ainda." /> : null}
+      {table.rows.length === 0 ? <EmptyState label={t("admin.writing.emptyPosts")} /> : null}
       {table.rows.map((row) => (
         <PostRow
           key={row["id"]}
@@ -81,6 +83,7 @@ function PostRow({
   onSave: (values: Row) => void;
   onDelete: () => void;
 }) {
+  const { t } = useI18n();
   const { draft, set } = useDraft(row);
   const [open, setOpen] = useState(false);
   const published = Boolean(draft["published"]);
@@ -101,7 +104,7 @@ function PostRow({
               published ? "border-signal/40 text-signal" : "border-border text-muted-foreground"
             }`}
           >
-            {published ? "publicado" : "rascunho"}
+            {published ? t("admin.writing.published") : t("admin.writing.draft")}
           </span>
           <RowActions onDelete={onDelete} />
         </div>
@@ -111,31 +114,31 @@ function PostRow({
         <>
           <div className="grid gap-4 sm:grid-cols-2">
             <TextField
-              label="Slug"
+              label={t("admin.writing.slug")}
               value={String(draft["slug"] ?? "")}
               onChange={(value) => set("slug", value)}
             />
             <TextField
-              label="Tags (separadas por vírgula)"
+              label={t("admin.writing.tags")}
               value={tagsToText(draft["tags"])}
               onChange={(value) => set("tags", textToTags(value))}
             />
           </div>
           <LocalizedField
-            label="Título"
+            label={t("admin.content.title")}
             editor="input"
             value={draft["title"]}
             onChange={(value) => set("title", value)}
           />
           <LocalizedField
-            label="Resumo"
+            label={t("admin.writing.excerpt")}
             editor="markdown"
             rows={2}
             value={draft["excerpt"]}
             onChange={(value) => set("excerpt", value)}
           />
           <LocalizedField
-            label="Conteúdo"
+            label={t("admin.writing.content")}
             editor="markdown"
             rows={16}
             value={draft["content"]}
@@ -157,7 +160,7 @@ function PostRow({
             }
           >
             <ToggleField
-              label={published ? "Publicado" : "Rascunho"}
+              label={published ? t("admin.writing.published") : t("admin.writing.draft")}
               checked={published}
               onChange={(value) => set("published", value)}
             />
@@ -171,6 +174,7 @@ function PostRow({
 /* ------------------------------ Case studies ------------------------------ */
 
 export function CaseStudiesPanel() {
+  const { t } = useI18n();
   const table = useAdminTable("case_studies");
   const projects = useAdminTable("projects");
 
@@ -178,7 +182,7 @@ export function CaseStudiesPanel() {
     <div className="space-y-4">
       <PanelHeader
         title="case_studies"
-        hint="Aprofundamentos vinculados a um projeto. O corpo suporta markdown."
+        hint={t("admin.writing.caseStudiesHint")}
         action={
           <Button
             size="sm"
@@ -191,11 +195,11 @@ export function CaseStudiesPanel() {
               })
             }
           >
-            <Plus className="size-3.5" /> Novo estudo de caso
+            <Plus className="size-3.5" /> {t("admin.writing.newCaseStudy")}
           </Button>
         }
       />
-      {table.rows.length === 0 ? <EmptyState label="Nenhum estudo de caso ainda." /> : null}
+      {table.rows.length === 0 ? <EmptyState label={t("admin.writing.emptyCaseStudies")} /> : null}
       {table.rows.map((row) => (
         <CaseRow
           key={row["id"]}
@@ -220,6 +224,7 @@ function CaseRow({
   onSave: (values: Row) => void;
   onDelete: () => void;
 }) {
+  const { t } = useI18n();
   const { draft, set } = useDraft(row);
   const [open, setOpen] = useState(false);
 
@@ -240,17 +245,17 @@ function CaseRow({
         <>
           <div className="grid gap-4 sm:grid-cols-2">
             <TextField
-              label="Slug"
+              label={t("admin.writing.slug")}
               value={String(draft["slug"] ?? "")}
               onChange={(value) => set("slug", value)}
             />
             <div className="space-y-1.5">
-              <span className="mono-label">Projeto vinculado</span>
+              <span className="mono-label">{t("admin.writing.linkedProject")}</span>
               <SelectField
                 value={String(draft["project_id"] ?? "")}
                 onChange={(value) => set("project_id", value || null)}
               >
-                <option value="">— nenhum —</option>
+                <option value="">{t("admin.writing.none")}</option>
                 {projects.map((project) => (
                   <option key={project["id"]} value={project["id"]}>
                     {String((project["title"] as Row)?.["en"] ?? project["slug"] ?? project["id"])}
@@ -260,28 +265,28 @@ function CaseRow({
             </div>
           </div>
           <LocalizedField
-            label="Título"
+            label={t("admin.content.title")}
             editor="input"
             value={draft["title"]}
             onChange={(value) => set("title", value)}
           />
           <div className="grid gap-4 lg:grid-cols-3">
             <LocalizedField
-              label="Problema"
+              label={t("admin.writing.problem")}
               editor="markdown"
               rows={4}
               value={draft["problem"]}
               onChange={(value) => set("problem", value)}
             />
             <LocalizedField
-              label="Abordagem"
+              label={t("admin.writing.approach")}
               editor="markdown"
               rows={4}
               value={draft["approach"]}
               onChange={(value) => set("approach", value)}
             />
             <LocalizedField
-              label="Resultado"
+              label={t("admin.writing.outcome")}
               editor="markdown"
               rows={4}
               value={draft["outcome"]}
@@ -289,7 +294,7 @@ function CaseRow({
             />
           </div>
           <LocalizedField
-            label="Corpo"
+            label={t("admin.content.body")}
             editor="markdown"
             rows={14}
             value={draft["content"]}
@@ -310,7 +315,7 @@ function CaseRow({
             }
           >
             <ToggleField
-              label="Publicado"
+              label={t("admin.writing.published")}
               checked={Boolean(draft["published"])}
               onChange={(value) => set("published", value)}
             />

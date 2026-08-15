@@ -5,6 +5,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { useI18n, type TranslationKey } from "@/lib/i18n";
 import { useAdminTable, type Row } from "./kit";
 import {
   CertificationsPanel,
@@ -24,32 +25,35 @@ import { LabelsPanel } from "./labels-panel";
 export type AdminLeaf = { id: string; label: string; render: () => ReactNode };
 export type AdminGroup = { id: string; label: string; items: AdminLeaf[] };
 
-const SYSTEM_EXTRA: Record<string, AdminLeaf[]> = {
-  home: [{ id: "testimonials", label: "depoimentos", render: () => <TestimonialsPanel /> }],
+type AdminLeafDef = { id: string; labelKey: TranslationKey; render: () => ReactNode };
+
+const SYSTEM_EXTRA: Record<string, AdminLeafDef[]> = {
+  home: [{ id: "testimonials", labelKey: "admin.nav.testimonials", render: () => <TestimonialsPanel /> }],
   about: [
-    { id: "timeline", label: "linha do tempo", render: () => <TimelinePanel /> },
-    { id: "certifications", label: "certificados", render: () => <CertificationsPanel /> },
+    { id: "timeline", labelKey: "admin.nav.timeline", render: () => <TimelinePanel /> },
+    { id: "certifications", labelKey: "admin.nav.certifications", render: () => <CertificationsPanel /> },
   ],
   projects: [
-    { id: "projects", label: "projetos", render: () => <ProjectsPanel /> },
-    { id: "project-labels", label: "rótulos de projeto", render: () => <ProjectLabelsPanel /> },
-    { id: "case-studies", label: "estudos de caso", render: () => <CaseStudiesPanel /> },
+    { id: "projects", labelKey: "admin.nav.projects", render: () => <ProjectsPanel /> },
+    { id: "project-labels", labelKey: "admin.nav.projectLabels", render: () => <ProjectLabelsPanel /> },
+    { id: "case-studies", labelKey: "admin.nav.caseStudies", render: () => <CaseStudiesPanel /> },
   ],
-  blog: [{ id: "posts", label: "posts", render: () => <BlogPanel /> }],
-  contact: [{ id: "messages", label: "mensagens", render: () => <MessagesPanel /> }],
+  blog: [{ id: "posts", labelKey: "admin.nav.posts", render: () => <BlogPanel /> }],
+  contact: [{ id: "messages", labelKey: "admin.nav.messages", render: () => <MessagesPanel /> }],
 };
 
-const GLOBAL_ITEMS_BASE: Omit<AdminLeaf, "render">[] = [
-  { id: "pages", label: "páginas" },
-  { id: "labels", label: "rótulo" },
-  { id: "settings", label: "configurações" },
-  { id: "analytics", label: "análises" },
+const GLOBAL_ITEMS_BASE: { id: string; labelKey: TranslationKey }[] = [
+  { id: "pages", labelKey: "admin.nav.pages" },
+  { id: "labels", labelKey: "admin.nav.labels" },
+  { id: "settings", labelKey: "admin.nav.settings" },
+  { id: "analytics", labelKey: "admin.nav.analytics" },
 ];
 
 export type ActiveLeaf = { group: string; item: string };
 
 /** Builds the accordion tree: one group per site page (system + custom), plus a "geral" group. */
 export function useAdminNav(onSelectPage: (slug: string) => void) {
+  const { t } = useI18n();
   const pages = useAdminTable("site_pages");
   const ordered = [...pages.rows].sort((a, b) => Number(a["order"] ?? 0) - Number(b["order"] ?? 0));
 
@@ -57,17 +61,22 @@ export function useAdminNav(onSelectPage: (slug: string) => void) {
     const slug = String(page["slug"]);
     const label = String((page["title"] as Row)?.["pt"] ?? slug);
     const items: AdminLeaf[] = [
-      { id: "sections", label: "seções", render: () => <SectionsPanel pageSlug={slug} /> },
-      ...(SYSTEM_EXTRA[slug] ?? []),
+      { id: "sections", label: t("admin.nav.sections"), render: () => <SectionsPanel pageSlug={slug} /> },
+      ...(SYSTEM_EXTRA[slug] ?? []).map((entry) => ({
+        id: entry.id,
+        label: t(entry.labelKey),
+        render: entry.render,
+      })),
     ];
     return { id: slug, label, items };
   });
 
   const globalGroup: AdminGroup = {
     id: "global",
-    label: "geral",
+    label: t("admin.nav.general"),
     items: GLOBAL_ITEMS_BASE.map((entry) => ({
-      ...entry,
+      id: entry.id,
+      label: t(entry.labelKey),
       render:
         entry.id === "pages"
           ? () => <PagesPanel onSelectPage={onSelectPage} />

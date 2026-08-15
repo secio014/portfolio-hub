@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useI18n, type TranslationKey } from "@/lib/i18n";
 import {
   AdminCard,
   EmptyState,
@@ -15,10 +16,10 @@ import {
   type Row,
 } from "./kit";
 
-const PLACEMENTS: { value: string; label: string }[] = [
-  { value: "header", label: "Cabeçalho (ao lado do logo)" },
-  { value: "hero", label: "Destaque da home" },
-  { value: "top", label: "Topo do conteúdo da página" },
+const PLACEMENTS: { value: string; labelKey: TranslationKey }[] = [
+  { value: "header", labelKey: "admin.labels.placementHeader" },
+  { value: "hero", labelKey: "admin.labels.placementHero" },
+  { value: "top", labelKey: "admin.labels.placementTop" },
 ];
 
 function useDraft(row: Row) {
@@ -33,6 +34,7 @@ function nextOrder(rows: Row[]) {
 }
 
 export function LabelsPanel() {
+  const { t } = useI18n();
   const table = useAdminTable("site_labels");
   const pages = useAdminTable("site_pages");
   const rows = table.rows;
@@ -40,8 +42,8 @@ export function LabelsPanel() {
   return (
     <div className="space-y-4">
       <PanelHeader
-        title="rótulo"
-        hint="Pequenos selos de status (ex: disponibilidade para trabalho). Crie quantos quiser, escolha o texto por idioma, a página e onde aparecem no site."
+        title={t("admin.nav.labels")}
+        hint={t("admin.labels.hint")}
         action={
           <Button
             size="sm"
@@ -55,11 +57,11 @@ export function LabelsPanel() {
               })
             }
           >
-            <Plus className="size-3.5" /> Adicionar rótulo
+            <Plus className="size-3.5" /> {t("admin.labels.addButton")}
           </Button>
         }
       />
-      {rows.length === 0 ? <EmptyState label="Nenhum rótulo ainda." /> : null}
+      {rows.length === 0 ? <EmptyState label={t("admin.labels.empty")} /> : null}
       {rows.map((row, index) => (
         <LabelRow
           key={row["id"]}
@@ -98,6 +100,7 @@ function LabelRow({
   onUp?: (() => void) | undefined;
   onDown?: (() => void) | undefined;
 }) {
+  const { t } = useI18n();
   const { draft, set } = useDraft(row);
 
   return (
@@ -105,12 +108,14 @@ function LabelRow({
       <div className="flex items-center justify-between gap-2">
         <p className="font-mono text-xs text-signal">
           {String(
-            (draft["text"] as Row)?.["pt"] || (draft["text"] as Row)?.["en"] || "novo rótulo",
+            (draft["text"] as Row)?.["pt"] ||
+              (draft["text"] as Row)?.["en"] ||
+              t("admin.labels.newLabel"),
           )}
         </p>
         <div className="flex items-center gap-2">
           <ToggleField
-            label="Ativo"
+            label={t("admin.labels.active")}
             checked={Boolean(draft["enabled"])}
             onChange={(value) => set("enabled", value)}
           />
@@ -119,7 +124,7 @@ function LabelRow({
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-1.5">
-          <span className="mono-label">Página</span>
+          <span className="mono-label">{t("admin.labels.page")}</span>
           <SelectField
             value={String(draft["page_slug"] ?? "home")}
             onChange={(value) => set("page_slug", value)}
@@ -132,14 +137,14 @@ function LabelRow({
           </SelectField>
         </div>
         <div className="space-y-1.5">
-          <span className="mono-label">Onde no site</span>
+          <span className="mono-label">{t("admin.labels.placement")}</span>
           <SelectField
             value={String(draft["placement"] ?? "header")}
             onChange={(value) => set("placement", value)}
           >
             {PLACEMENTS.map((placement) => (
               <option key={placement.value} value={placement.value}>
-                {placement.label}
+                {t(placement.labelKey)}
               </option>
             ))}
           </SelectField>
@@ -147,13 +152,10 @@ function LabelRow({
       </div>
       {String(draft["placement"] ?? "") === "hero" &&
       String(draft["page_slug"] ?? "") !== "home" ? (
-        <p className="font-mono text-[11px] text-warn">
-          O destaque (herói) só é exibido na página inicial — este rótulo não vai aparecer até que a
-          página seja "Home".
-        </p>
+        <p className="font-mono text-[11px] text-warn">{t("admin.labels.heroWarning")}</p>
       ) : null}
       <LocalizedField
-        label="Texto"
+        label={t("admin.labels.text")}
         editor="input"
         value={draft["text"]}
         onChange={(value) => set("text", value)}

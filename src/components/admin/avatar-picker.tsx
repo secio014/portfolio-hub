@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { searchGifs } from "@/lib/giphy.functions";
+import { useI18n } from "@/lib/i18n";
 
 const BUCKET = "portfolio";
 
@@ -40,6 +41,7 @@ export function AvatarPickerDialog({
   onOpenChange: (open: boolean) => void;
   onSelect: (url: string) => void;
 }) {
+  const { t } = useI18n();
   const [mode, setMode] = useState<"upload" | "gif">("upload");
   const [uploading, setUploading] = useState(false);
   const [query, setQuery] = useState("");
@@ -54,7 +56,7 @@ export function AvatarPickerDialog({
       onSelect(url);
       onOpenChange(false);
     } catch (error) {
-      toast.error((error as { message?: string }).message ?? "Falha no upload");
+      toast.error((error as { message?: string }).message ?? t("admin.avatar.uploadFailed"));
     } finally {
       setUploading(false);
     }
@@ -67,7 +69,7 @@ export function AvatarPickerDialog({
       const { results: gifs } = await searchGifs({ data: { query: query.trim() } });
       setResults(gifs);
     } catch (error) {
-      toast.error((error as { message?: string }).message ?? "Falha na busca de GIFs");
+      toast.error((error as { message?: string }).message ?? t("admin.avatar.searchFailed"));
     } finally {
       setSearching(false);
     }
@@ -77,18 +79,16 @@ export function AvatarPickerDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle className="font-mono text-sm">Foto de perfil</DialogTitle>
-          <DialogDescription>
-            Envie um arquivo do seu computador ou busque um GIF para usar como avatar do site.
-          </DialogDescription>
+          <DialogTitle className="font-mono text-sm">{t("admin.avatar.title")}</DialogTitle>
+          <DialogDescription>{t("admin.avatar.description")}</DialogDescription>
         </DialogHeader>
         <Tabs value={mode} onValueChange={(value) => setMode(value as "upload" | "gif")}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="upload" className="font-mono text-xs">
-              <Paperclip className="mr-1.5 size-3.5" /> Anexar arquivo
+              <Paperclip className="mr-1.5 size-3.5" /> {t("admin.avatar.attachFile")}
             </TabsTrigger>
             <TabsTrigger value="gif" className="font-mono text-xs">
-              <Search className="mr-1.5 size-3.5" /> Buscar GIF
+              <Search className="mr-1.5 size-3.5" /> {t("admin.avatar.searchGif")}
             </TabsTrigger>
           </TabsList>
 
@@ -111,7 +111,8 @@ export function AvatarPickerDialog({
               className="h-9 w-full font-mono text-xs"
               onClick={() => inputRef.current?.click()}
             >
-              <Upload className="size-3.5" /> {uploading ? "Enviando…" : "Escolher imagem"}
+              <Upload className="size-3.5" />{" "}
+              {uploading ? t("admin.avatar.uploading") : t("admin.avatar.chooseImage")}
             </Button>
           </TabsContent>
 
@@ -120,7 +121,7 @@ export function AvatarPickerDialog({
               <Input
                 autoFocus
                 value={query}
-                placeholder="Buscar GIFs…"
+                placeholder={t("admin.avatar.searchPlaceholder")}
                 onChange={(event) => setQuery(event.target.value)}
                 onKeyDown={(event) => {
                   if (event.key === "Enter") {
@@ -137,7 +138,7 @@ export function AvatarPickerDialog({
                 className="h-9 shrink-0 font-mono text-xs"
                 onClick={() => void handleSearch()}
               >
-                {searching ? "…" : "Buscar"}
+                {searching ? "…" : t("admin.avatar.search")}
               </Button>
             </div>
             {results.length ? (
@@ -158,9 +159,9 @@ export function AvatarPickerDialog({
               </div>
             ) : (
               <p className="font-mono text-[11px] text-muted-foreground">
-                Busque por um termo para ver resultados. Requer{" "}
-                <code className="rounded-sm bg-muted px-1 py-0.5">GIPHY_API_KEY</code> configurado
-                nas variáveis de ambiente do servidor.
+                {t("admin.avatar.searchHintBefore")}{" "}
+                <code className="rounded-sm bg-muted px-1 py-0.5">GIPHY_API_KEY</code>{" "}
+                {t("admin.avatar.searchHintAfter")}
               </p>
             )}
           </TabsContent>

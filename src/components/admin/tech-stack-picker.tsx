@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TECH_STACK_OPTIONS, getTechIcon } from "@/lib/tech-stack";
+import { useI18n } from "@/lib/i18n";
 
 export function TechStackPicker({
   value,
@@ -11,6 +12,7 @@ export function TechStackPicker({
   value: string[];
   onChange: (next: string[]) => void;
 }) {
+  const { t } = useI18n();
   const [query, setQuery] = useState("");
   const selected = new Set(value);
   const filtered = TECH_STACK_OPTIONS.filter(
@@ -28,7 +30,7 @@ export function TechStackPicker({
 
   return (
     <div className="space-y-2">
-      <Label className="mono-label">Stack técnica</Label>
+      <Label className="mono-label">{t("admin.techStack.label")}</Label>
 
       {value.length ? (
         <div className="flex flex-wrap gap-1.5">
@@ -50,13 +52,13 @@ export function TechStackPicker({
         </div>
       ) : (
         <p className="font-mono text-[11px] text-muted-foreground">
-          Nenhuma tecnologia selecionada ainda.
+          {t("admin.techStack.empty")}
         </p>
       )}
 
       <Input
         value={query}
-        placeholder="Buscar tecnologia…"
+        placeholder={t("admin.techStack.searchPlaceholder")}
         onChange={(event) => setQuery(event.target.value)}
         className="h-9 font-mono text-xs"
       />
@@ -75,7 +77,7 @@ export function TechStackPicker({
         ))}
         {filtered.length === 0 ? (
           <p className="col-span-full py-2 text-center font-mono text-xs text-muted-foreground">
-            Nenhum resultado
+            {t("admin.techStack.noResults")}
           </p>
         ) : null}
       </div>
