@@ -42,18 +42,23 @@ function useIdleLogout() {
   }, []);
 }
 
-export const Route = createFileRoute("/admin-pedro")({
-  head: () => ({
-    meta: [
-      { title: "Admin" },
-      { name: "robots", content: "noindex, nofollow" },
-      { name: "description", content: "Área privada." },
-    ],
-  }),
+export const Route = createFileRoute("/$adminPath")({
+  head: ({ params }) =>
+    params.adminPath === import.meta.env.VITE_ADMIN_PATH
+      ? {
+          meta: [
+            { title: "Admin" },
+            { name: "robots", content: "noindex, nofollow" },
+            { name: "description", content: "Área privada." },
+          ],
+        }
+      : { meta: [{ title: "404 — Page not found" }] },
   component: AdminPage,
 });
 
+/** Only matches when the URL segment equals the secret path from VITE_ADMIN_PATH — every other value renders 404. */
 function AdminPage() {
+  const { adminPath } = Route.useParams();
   const [userId, setUserId] = useState<string | null>(null);
   const [checking, setChecking] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -92,6 +97,10 @@ function AdminPage() {
       }
     })();
   }, [userId]);
+
+  if (adminPath !== import.meta.env.VITE_ADMIN_PATH) {
+    return <NotAuthorized />;
+  }
 
   if (checking) {
     return <div className="min-h-screen bg-background" />;

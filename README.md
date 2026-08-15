@@ -71,6 +71,7 @@ cp .env.example .env
 | `SUPABASE_SERVICE_ROLE_KEY`      | Service role key (server-side only, **never expose client-side**) |
 | `SUPABASE_PROJECT_ID` / `VITE_SUPABASE_PROJECT_ID` | Project reference ID                |
 | `GITHUB_TOKEN`                     | GitHub personal access token, used server-side to sync repos & contribution activity (see below) |
+| `VITE_ADMIN_PATH`                  | The URL segment where the admin panel lives — pick your own secret value, never commit it |
 
 #### 3. Run the database migrations
 
@@ -114,7 +115,7 @@ supabase/
 
 ### 🔒 Admin access
 
-The admin panel is protected by Supabase Auth — only accounts flagged as admins in the database can sign in and edit content. It's organized as a sidebar with an accordion per site page (Home, About, Projects, Blog, Contact, plus any custom pages you create); each page node expands into its own sections and content types, and a "Pages" panel lets you add whole new pages that are automatically added to site navigation.
+The admin panel is protected by Supabase Auth — only accounts flagged as admins in the database can sign in and edit content. Its URL is not hardcoded or published: it's whatever single path segment you set as `VITE_ADMIN_PATH` in your environment (e.g. `VITE_ADMIN_PATH=my-secret-path` → the panel lives at `/my-secret-path`); any other path just renders the normal 404 page, so the admin URL isn't discoverable from the source or a page scan. It's organized as a sidebar with an accordion per site page (Home, About, Projects, Blog, Contact, plus any custom pages you create); each page node expands into its own sections and content types, and a "Pages" panel lets you add whole new pages that are automatically added to site navigation.
 
 ### 🐙 Connecting GitHub (step by step)
 
@@ -128,7 +129,7 @@ The homepage's featured projects and contribution graph are pulled live from Git
    - Locally: put it in `.env` as `GITHUB_TOKEN=ghp_xxx` and restart `npm run dev`.
    - In production (Cloudflare/your deploy target): add `GITHUB_TOKEN` as a secret/environment variable there too — it is **never** sent to the browser, it's read server-side only.
 3. **Set your GitHub username (and organization, optional)**
-   - Sign in to `/admin-pedro` → **Configurações** (Settings).
+   - Sign in to your admin panel (the path set in `VITE_ADMIN_PATH`) → **Configurações** (Settings).
    - Fill in **Usuário do GitHub** with your personal username.
    - If you also want repos from an organization you belong to, fill in **Organização do GitHub** with the org's login name.
    - Click **Salvar**.
@@ -208,6 +209,7 @@ cp .env.example .env
 | `SUPABASE_SERVICE_ROLE_KEY`      | Chave service role (somente servidor, **nunca exponha no client**) |
 | `SUPABASE_PROJECT_ID` / `VITE_SUPABASE_PROJECT_ID` | ID de referência do projeto           |
 | `GITHUB_TOKEN`                     | Token de acesso pessoal do GitHub, usado no servidor para sincronizar repositórios e atividade de contribuição (veja abaixo) |
+| `VITE_ADMIN_PATH`                  | O segmento de URL onde o painel admin fica — escolha seu próprio valor secreto, nunca faça commit dele |
 
 #### 3. Rodar as migrações do banco
 
@@ -251,7 +253,7 @@ supabase/
 
 ### 🔒 Acesso ao admin
 
-O painel administrativo é protegido pelo Supabase Auth — só contas marcadas como admin no banco conseguem entrar e editar conteúdo. Ele é organizado como um menu lateral com um acordeão por página do site (Home, Sobre, Projetos, Blog, Contato, além de qualquer página customizada que você criar); cada página se expande nas suas próprias seções e tipos de conteúdo, e um painel de "Páginas" permite adicionar páginas inteiramente novas, que já entram automaticamente na navegação do site.
+O painel administrativo é protegido pelo Supabase Auth — só contas marcadas como admin no banco conseguem entrar e editar conteúdo. A URL não é fixa no código nem divulgada: é o segmento que você definir em `VITE_ADMIN_PATH` no ambiente (ex.: `VITE_ADMIN_PATH=meu-caminho-secreto` → o painel fica em `/meu-caminho-secreto`); qualquer outro caminho simplesmente mostra a página 404 normal, então a URL do admin não é descobrível pelo código-fonte nem por uma varredura de páginas. Ele é organizado como um menu lateral com um acordeão por página do site (Home, Sobre, Projetos, Blog, Contato, além de qualquer página customizada que você criar); cada página se expande nas suas próprias seções e tipos de conteúdo, e um painel de "Páginas" permite adicionar páginas inteiramente novas, que já entram automaticamente na navegação do site.
 
 ### 🐙 Conectando o GitHub (passo a passo)
 
@@ -265,7 +267,7 @@ Os projetos em destaque e o gráfico de contribuições da home são puxados ao 
    - Localmente: coloque em `.env` como `GITHUB_TOKEN=ghp_xxx` e reinicie o `npm run dev`.
    - Em produção (Cloudflare ou onde você fizer o deploy): adicione `GITHUB_TOKEN` também como secret/variável de ambiente lá — ele **nunca** é enviado ao navegador, é lido somente no servidor.
 3. **Configure seu usuário do GitHub (e organização, opcional)**
-   - Entre em `/admin-pedro` → **Configurações**.
+   - Entre no seu painel admin (o caminho definido em `VITE_ADMIN_PATH`) → **Configurações**.
    - Preencha **Usuário do GitHub** com seu usuário pessoal.
    - Se também quiser repositórios de uma organização da qual você participa, preencha **Organização do GitHub** com o login da org.
    - Clique em **Salvar**.
