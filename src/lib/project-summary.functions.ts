@@ -13,12 +13,20 @@ const schema = z.object({
 });
 
 /**
- * Generates a short "what this project does" summary (en/pt/es) via
- * Anthropic. Admin-only, on-demand (button click in the admin panel) — never
- * called automatically by a visitor opening the project modal. Returns the
- * text only; the admin panel is responsible for saving it onto the relevant
- * `projects` row (same path as any other manual edit), so a generated
- * summary never overwrites an admin's edit without an explicit save.
+ * Generates a project description (en/pt/es) via Anthropic, using the repo's
+ * README as input when available (falls back to the manually-entered
+ * description otherwise) — the README itself is only ever used as AI input,
+ * never shown in the admin UI. Admin-only, on-demand (button click in the
+ * admin panel) — never called automatically by a visitor opening the
+ * project modal. The admin panel is responsible for saving the result onto
+ * the relevant `projects` row (same path as any other manual edit), so a
+ * generated description never overwrites an admin's edit without an
+ * explicit save.
+ *
+ * The Workers AI binding this relies on only exists in a deployed/
+ * `wrangler dev` runtime (see summarize.server.ts), so plain `vite dev`
+ * always fails to generate. That failure is caught and returned as
+ * `summaryError` instead of thrown, so the caller can show a clear message.
  */
 export const generateProjectSummary = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -32,15 +40,21 @@ export const generateProjectSummary = createServerFn({ method: "POST" })
     let description = data.description;
     if (data.readmeFrom) {
       const readme = await fetchReadme(data.readmeFrom, cleanToken(process.env["GITHUB_TOKEN"]));
-      if (!readme) throw new Error("Could not fetch a README for this repository.");
-      description = readme.slice(0, 6000);
+      if (readme) description = readme.slice(0, 6000);
     }
 
-    const summary = await generateSummaryText({
-      title: data.title,
-      description,
-      tech: data.tech,
-    });
-
-    return { ok: true as const, summary };
+    try {
+      const summary = await generateSummaryText({
+        title: data.title,
+        description,
+        tech: data.tech,
+      });
+      return { ok: true as const, summary, summaryError: null };
+    } catch (err) {
+      return {
+        ok: true as const,
+        summary: null,
+        summaryError: err instanceof Error ? err.message : "Failed to generate summary.",
+      };
+    }
   });

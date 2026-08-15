@@ -112,23 +112,14 @@ export function ProjectsPanel() {
           <Button
             size="sm"
             className="h-9 font-mono text-xs"
-            onClick={async () => {
-              const created = await manualTable.insertAndReturn({
+            onClick={() =>
+              void manualTable.insert({
                 title: { en: "New project" },
                 source: "manual",
                 label_id: labelsByKey.get("production")?.["id"] ?? null,
                 order: manual.length,
-              });
-              if (!created) return;
-              try {
-                const { summary } = await generateProjectSummary({
-                  data: { title: "New project", description: "", tech: [], readmeFrom: null },
-                });
-                await manualTable.update(created["id"], { summary });
-              } catch (err) {
-                console.error("[projects] initial summary generation failed:", err);
-              }
-            }}
+              })
+            }
           >
             <Plus className="size-3.5" /> Adicionar projeto
           </Button>
@@ -251,28 +242,44 @@ function ProjectRow({
   readOnlyRemote?: boolean;
 }) {
   const [draft, setDraft] = useState<Row>(row);
-  useEffect(() => setDraft(row), [row]);
+  // `row` is a fresh object every render for GitHub-synced repos
+  // (mergeGithubRow() rebuilds it each time, including on unrelated
+  // background refetches of other admin queries), so resetting on `row`
+  // identity would wipe in-progress, unsaved edits mid-typing. Resync only
+  // when we're actually looking at a different project.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => setDraft(row), [row["id"] ?? row["full_name"]]);
   const set = (key: string, value: unknown) => setDraft((prev) => ({ ...prev, [key]: value }));
   const tech = Array.isArray(draft["tech"]) ? (draft["tech"] as string[]).join(", ") : "";
-  const [generating, setGenerating] = useState<"description" | "readme" | null>(null);
+  const [generating, setGenerating] = useState(false);
 
-  async function handleGenerate(source: "description" | "readme") {
-    setGenerating(source);
+  /**
+   * Fills the description straight from the AI (using the repo's README as
+   * input automatically when available — never shown, just fed in) into the
+   * draft. No intermediate review step: same pattern as any other field,
+   * the admin reviews it inline and clicks Salvar to persist.
+   */
+  async function handleGenerate() {
+    setGenerating(true);
     try {
-      const { summary } = await generateProjectSummary({
+      const { summary, summaryError } = await generateProjectSummary({
         data: {
           title: localized(draft["title"], "en"),
           description: localized(draft["description"], "en"),
           tech: Array.isArray(draft["tech"]) ? (draft["tech"] as string[]) : [],
-          readmeFrom: source === "readme" ? String(draft["full_name"] ?? "") || null : null,
+          readmeFrom: String(draft["full_name"] ?? "") || null,
         },
       });
-      set("summary", summary);
-      toast.success("Resumo gerado — clique em Salvar para aplicar.");
+      if (summary) {
+        set("description", summary);
+        toast.success("Descrição gerada — clique em Salvar para aplicar.");
+      } else if (summaryError) {
+        toast.warning(summaryError);
+      }
     } catch (err) {
-      toast.error((err as Error).message || "Falha ao gerar resumo");
+      toast.error((err as Error).message || "Falha ao gerar descrição");
     } finally {
-      setGenerating(null);
+      setGenerating(false);
     }
   }
 
@@ -283,11 +290,6 @@ function ProjectRow({
           {String((draft["title"] as Row)?.["en"] ?? draft["slug"] ?? "untitled")}
         </p>
         <div className="flex items-center gap-3">
-          <ToggleField
-            label="Destaque"
-            checked={Boolean(draft["featured"])}
-            onChange={(value) => set("featured", value)}
-          />
           <ToggleField
             label="Visível"
             checked={Boolean(draft["visible"])}
@@ -331,8 +333,7 @@ function ProjectRow({
 
       {readOnlyRemote ? (
         <p className="font-mono text-[11px] text-muted-foreground">
-          repo: {String(draft["repo_url"] ?? "—")} · os campos sincronizados (título, descrição,
-          tecnologias) vêm do GitHub.
+          repo: {String(draft["repo_url"] ?? "—")} · título e tecnologias vêm do GitHub.
         </p>
       ) : (
         <>
@@ -341,13 +342,6 @@ function ProjectRow({
             editor="input"
             value={draft["title"]}
             onChange={(value) => set("title", value)}
-          />
-          <LocalizedField
-            label="Descrição"
-            editor="markdown"
-            rows={3}
-            value={draft["description"]}
-            onChange={(value) => set("description", value)}
           />
           <div className="grid gap-4 sm:grid-cols-2">
             <TextField
@@ -379,48 +373,41 @@ function ProjectRow({
 
       <div className="space-y-1.5">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <span className="mono-label">Resumo rápido (IA, exibido no modal do projeto)</span>
-          <div className="flex gap-1.5">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-7 font-mono text-[10px]"
-              disabled={generating !== null}
-              onClick={() => void handleGenerate("description")}
-            >
-              <Sparkles className="size-3" />{" "}
-              {generating === "description" ? "Gerando…" : "Gerar via IA"}
-            </Button>
-            {draft["full_name"] ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-7 font-mono text-[10px]"
-                disabled={generating !== null}
-                onClick={() => void handleGenerate("readme")}
-              >
-                <Github className="size-3" />{" "}
-                {generating === "readme" ? "Gerando…" : "Gerar do README"}
-              </Button>
-            ) : null}
-          </div>
+          <span className="mono-label">Descrição</span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-7 font-mono text-[10px]"
+            disabled={generating}
+            onClick={() => void handleGenerate()}
+          >
+            <Sparkles className="size-3" /> {generating ? "Gerando…" : "Gerar via IA"}
+          </Button>
         </div>
         <LocalizedField
           label=""
-          editor="textarea"
-          rows={2}
-          value={draft["summary"]}
-          onChange={(value) => set("summary", value)}
+          editor="markdown"
+          rows={3}
+          value={draft["description"]}
+          onChange={(value) => set("description", value)}
         />
       </div>
+
+      <LocalizedField
+        label="Resumo rápido (exibido em destaque no modal do projeto, opcional)"
+        editor="textarea"
+        rows={2}
+        value={draft["summary"]}
+        onChange={(value) => set("summary", value)}
+      />
 
       <SaveBar
         onSave={() =>
           onSave(
             readOnlyRemote
               ? {
+                  description: draft["description"] ?? {},
                   summary: draft["summary"] ?? {},
                   featured: Boolean(draft["featured"]),
                   visible: Boolean(draft["visible"]),

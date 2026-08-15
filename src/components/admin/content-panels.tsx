@@ -542,12 +542,15 @@ function TimelineRow({
           value={String(draft["start_date"] ?? "")}
           onChange={(value) => set("start_date", value)}
         />
-        <TextField
-          label="Data de término (vazio = atual)"
-          type="date"
-          value={String(draft["end_date"] ?? "")}
-          onChange={(value) => set("end_date", value)}
-        />
+        <div className="space-y-1.5">
+          <TextField
+            label="Data de término"
+            type="date"
+            value={String(draft["end_date"] ?? "")}
+            onChange={(value) => set("end_date", value)}
+          />
+          <p className="font-mono text-[10px] text-muted-foreground">Vazio = atual</p>
+        </div>
       </div>
       <LocalizedField
         label="Título"

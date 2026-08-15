@@ -134,9 +134,11 @@ function LabelRow({
             className={`relative size-8 shrink-0 cursor-pointer overflow-hidden rounded-full border-2 transition-transform ${
               isCustom ? "scale-110 border-foreground" : "border-transparent"
             }`}
-            style={{
-              background: "conic-gradient(red, yellow, lime, cyan, blue, magenta, red)",
-            }}
+            style={
+              isCustom
+                ? { backgroundColor: color }
+                : { background: "conic-gradient(red, yellow, lime, cyan, blue, magenta, red)" }
+            }
           >
             <span className="sr-only">Cor personalizada</span>
             <input
