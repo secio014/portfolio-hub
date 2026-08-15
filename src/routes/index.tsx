@@ -56,7 +56,8 @@ function Home() {
   const { data: repos = [] } = useQuery(reposQuery);
   const { data: manual = [] } = useQuery(projectsQuery);
   const { data: cases = [] } = useQuery(caseStudiesQuery);
-  const { data: testimonials = [] } = useQuery(testimonialsQuery);
+  const { data: testimonialsData = [] } = useQuery(testimonialsQuery);
+  const testimonials = testimonialsData.filter((item) => item.visible !== false);
   const { data: activity } = useQuery(activityQuery);
   const { data: resume } = useQuery(resumeQuery);
   const { data: posts = [] } = useQuery(blogQuery);

@@ -27,7 +27,9 @@ function CustomPage() {
   if (!pagesLoading && !page) throw notFound();
 
   const pageSections = sections
-    .filter((section) => section.page_slug === slug && section.type === "custom")
+    .filter(
+      (section) => section.page_slug === slug && section.type === "custom" && section.visible,
+    )
     .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
   return (

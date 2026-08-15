@@ -64,38 +64,41 @@ function ContactPage() {
   const blocksFor = (sectionId: string | undefined) =>
     sectionId ? sectionBlocks.filter((block) => block.section_id === sectionId) : [];
   const contact = sections.find((section) => section.section_key === "contact");
+  const isContactIntroVisible = contact ? contact.visible !== false : true;
   const customSections = sections.filter(
     (section) => section.page_slug === "contact" && section.type === "custom" && section.visible,
   );
 
   return (
     <SiteLayout page="contact">
-      <div className="relative">
-        <div className="grid-canvas pointer-events-none absolute inset-0 -z-10" aria-hidden />
-        <Section className="!pb-8">
-          <SectionHeading
-            index="01"
-            title={localized(contact?.title, locale) || t("nav.contact")}
-            {...(localized(contact?.subtitle, locale)
-              ? { subtitle: localized(contact?.subtitle, locale) }
-              : {})}
-          />
-          {localized(contact?.body, locale) ? (
-            <div className="max-w-2xl text-sm text-muted-foreground sm:text-base">
-              <Markdown value={localized(contact?.body, locale)} />
-            </div>
-          ) : null}
-          {blocksFor(contact?.id).length ? (
-            <div className="mt-6">
-              <SectionBlocks
-                blocks={blocksFor(contact?.id)}
-                layout={String(contact?.layout ?? "vertical")}
-                locale={locale}
-              />
-            </div>
-          ) : null}
-        </Section>
-      </div>
+      {isContactIntroVisible ? (
+        <div className="relative">
+          <div className="grid-canvas pointer-events-none absolute inset-0 -z-10" aria-hidden />
+          <Section className="!pb-8">
+            <SectionHeading
+              index="01"
+              title={localized(contact?.title, locale) || t("nav.contact")}
+              {...(localized(contact?.subtitle, locale)
+                ? { subtitle: localized(contact?.subtitle, locale) }
+                : {})}
+            />
+            {localized(contact?.body, locale) ? (
+              <div className="max-w-2xl text-sm text-muted-foreground sm:text-base">
+                <Markdown value={localized(contact?.body, locale)} />
+              </div>
+            ) : null}
+            {blocksFor(contact?.id).length ? (
+              <div className="mt-6">
+                <SectionBlocks
+                  blocks={blocksFor(contact?.id)}
+                  layout={String(contact?.layout ?? "vertical")}
+                  locale={locale}
+                />
+              </div>
+            ) : null}
+          </Section>
+        </div>
+      ) : null}
 
       <Section className="!pt-0">
         <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr] lg:items-start">

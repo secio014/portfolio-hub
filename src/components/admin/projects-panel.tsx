@@ -291,7 +291,10 @@ function ProjectRow({
           <ToggleField
             label="Visível"
             checked={Boolean(draft["visible"])}
-            onChange={(value) => set("visible", value)}
+            onChange={(value) => {
+              set("visible", value);
+              onSave({ visible: value });
+            }}
           />
           <RowActions onUp={onUp} onDown={onDown} onDelete={onDelete} />
         </div>
