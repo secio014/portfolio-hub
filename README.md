@@ -114,7 +114,7 @@ supabase/
 
 ### 🔒 Admin access
 
-The admin panel lives at `/admin-pedro` and is protected by Supabase Auth — only accounts flagged as admins in the database can sign in and edit content. It's organized as a sidebar with an accordion per site page (Home, About, Projects, Blog, Contact, plus any custom pages you create); each page node expands into its own sections and content types, and a "Pages" panel lets you add whole new pages that are automatically added to site navigation.
+The admin panel is protected by Supabase Auth — only accounts flagged as admins in the database can sign in and edit content. It's organized as a sidebar with an accordion per site page (Home, About, Projects, Blog, Contact, plus any custom pages you create); each page node expands into its own sections and content types, and a "Pages" panel lets you add whole new pages that are automatically added to site navigation.
 
 ### 🐙 Connecting GitHub (step by step)
 
@@ -251,7 +251,7 @@ supabase/
 
 ### 🔒 Acesso ao admin
 
-O painel administrativo fica em `/admin-pedro` e é protegido pelo Supabase Auth — só contas marcadas como admin no banco conseguem entrar e editar conteúdo. Ele é organizado como um menu lateral com um acordeão por página do site (Home, Sobre, Projetos, Blog, Contato, além de qualquer página customizada que você criar); cada página se expande nas suas próprias seções e tipos de conteúdo, e um painel de "Páginas" permite adicionar páginas inteiramente novas, que já entram automaticamente na navegação do site.
+O painel administrativo é protegido pelo Supabase Auth — só contas marcadas como admin no banco conseguem entrar e editar conteúdo. Ele é organizado como um menu lateral com um acordeão por página do site (Home, Sobre, Projetos, Blog, Contato, além de qualquer página customizada que você criar); cada página se expande nas suas próprias seções e tipos de conteúdo, e um painel de "Páginas" permite adicionar páginas inteiramente novas, que já entram automaticamente na navegação do site.
 
 ### 🐙 Conectando o GitHub (passo a passo)
 
