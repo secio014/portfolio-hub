@@ -5,7 +5,7 @@ const MODEL = "@cf/meta/llama-3.1-8b-instruct-fast";
 export type ProjectSummary = { en: string; pt: string; es: string };
 
 type WorkersAiBinding = {
-  run: (model: string, input: Record<string, unknown>) => Promise<{ response?: string }>;
+  run: (model: string, input: Record<string, unknown>) => Promise<{ response?: unknown }>;
 };
 
 /**
@@ -58,7 +58,12 @@ export async function generateSummaryText(input: {
     max_tokens: 400,
   });
 
-  const text = result.response ?? "";
+  // The -fast model's `response` is normally a string, but some responses
+  // (e.g. when the model reaches for tool-call-shaped output despite no
+  // tools being offered) come back as a non-string value instead — coerce
+  // defensively so `.match()` below never throws on a non-string.
+  const text =
+    typeof result.response === "string" ? result.response : JSON.stringify(result.response ?? "");
   const parsed = extractJson(text) as Partial<ProjectSummary>;
 
   if (!parsed.en || !parsed.pt || !parsed.es) {
