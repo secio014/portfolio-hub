@@ -27,6 +27,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { LOCALES, type Locale } from "@/lib/i18n";
+import { settingsQuery } from "@/lib/queries";
 import { MediaPickerDialog } from "./media-picker";
 
 /** Loose accessor: admin panels touch many tables generically. */
@@ -414,6 +415,8 @@ export function MarkdownEditor({
   const [ref, setRef] = useState<HTMLTextAreaElement | null>(null);
   const [prompt, setPrompt] = useState<"code" | null>(null);
   const [media, setMedia] = useState<"image" | "video" | null>(null);
+  const { data: settings } = useQuery(settingsQuery);
+  const avatarUrl = settings?.avatar_url;
 
   function apply(prefix: string, suffix: string) {
     if (!ref) {
@@ -465,6 +468,16 @@ export function MarkdownEditor({
         >
           vídeo
         </button>
+        {avatarUrl ? (
+          <button
+            type="button"
+            title="Inserir a foto de perfil do site (configurações › URL do avatar) aqui"
+            onClick={() => apply(`\n![avatar](${avatarUrl})\n`, "")}
+            className="rounded-sm px-1.5 py-0.5 font-mono text-[10px] uppercase text-muted-foreground transition-colors hover:bg-accent hover:text-signal"
+          >
+            avatar
+          </button>
+        ) : null}
         <span className="ml-auto font-mono text-[10px] text-muted-foreground">markdown</span>
       </div>
       <Textarea

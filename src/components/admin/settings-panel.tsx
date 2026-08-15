@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, RefreshCw } from "lucide-react";
+import { AlertTriangle, Paperclip, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { getGithubSyncStatus, syncGithubData } from "@/lib/github-sync.functions";
@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { AdminCard, PanelHeader, SaveBar, TextField, type Row } from "./kit";
 import { TechStackPicker } from "./tech-stack-picker";
 import { SecurityPanel } from "./security-panel";
+import { AvatarPickerDialog } from "./avatar-picker";
 
 /** Accepts a bare handle or a pasted github.com URL and returns just the handle. */
 function sanitizeGithubHandle(input: string): string {
@@ -52,6 +53,7 @@ export function SettingsPanel() {
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState<Row>({});
   const [syncing, setSyncing] = useState(false);
+  const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
   const { data: githubStatus } = useQuery({
     queryKey: ["admin", "github_sync_status"],
     queryFn: () => getGithubSyncStatus(),
@@ -163,12 +165,38 @@ export function SettingsPanel() {
             value={String(draft["linkedin_url"] ?? "")}
             onChange={(value) => set("linkedin_url", value)}
           />
-          <TextField
-            label="URL do avatar"
-            value={String(draft["avatar_url"] ?? "")}
-            onChange={(value) => set("avatar_url", value)}
-          />
+          <div className="space-y-1.5">
+            <TextField
+              label="URL do avatar"
+              value={String(draft["avatar_url"] ?? "")}
+              onChange={(value) => set("avatar_url", value)}
+            />
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-8 font-mono text-[11px]"
+                onClick={() => setAvatarPickerOpen(true)}
+              >
+                <Paperclip className="size-3" /> Anexar arquivo ou buscar GIF
+              </Button>
+              {draft["avatar_url"] ? (
+                <img
+                  src={String(draft["avatar_url"])}
+                  alt=""
+                  className="size-8 shrink-0 rounded-full border border-border object-cover"
+                />
+              ) : null}
+            </div>
+          </div>
         </div>
+
+        <AvatarPickerDialog
+          open={avatarPickerOpen}
+          onOpenChange={setAvatarPickerOpen}
+          onSelect={(url) => set("avatar_url", url)}
+        />
 
         <TechStackPicker value={stack} onChange={(next) => set("tech_stack", next)} />
 

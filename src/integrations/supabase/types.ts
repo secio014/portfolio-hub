@@ -57,6 +57,7 @@ export type Database = {
         Row: {
           content: Json;
           cover_media_id: string | null;
+          created_at: string;
           excerpt: Json;
           id: string;
           published: boolean;
@@ -69,6 +70,7 @@ export type Database = {
         Insert: {
           content?: Json;
           cover_media_id?: string | null;
+          created_at?: string;
           excerpt?: Json;
           id?: string;
           published?: boolean;
@@ -81,6 +83,7 @@ export type Database = {
         Update: {
           content?: Json;
           cover_media_id?: string | null;
+          created_at?: string;
           excerpt?: Json;
           id?: string;
           published?: boolean;
