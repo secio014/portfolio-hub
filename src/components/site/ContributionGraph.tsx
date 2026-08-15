@@ -10,12 +10,40 @@ function level(count: number) {
   return "bg-signal";
 }
 
+/**
+ * Buckets days into Sunday-Saturday weeks anchored to absolute calendar
+ * dates, not array position. Personal and org calendars come from two
+ * independent GitHub queries that can start on different weekdays (a
+ * partial leading week), so index-based chunking (every 7 items) used to
+ * shift one grid's rows relative to the other. Anchoring to real dates
+ * means both grids' week columns line up on the same calendar week even if
+ * their underlying arrays differ in length or start date.
+ */
+function toWeeks(days: Day[]): Day[][] {
+  if (!days.length) return [];
+  const byDate = new Map(days.map((day) => [day.date, day.count]));
+  const times = days.map((day) => new Date(`${day.date}T00:00:00Z`).getTime());
+  const start = new Date(Math.min(...times));
+  const end = new Date(Math.max(...times));
+  start.setUTCDate(start.getUTCDate() - start.getUTCDay());
+  end.setUTCDate(end.getUTCDate() + (6 - end.getUTCDay()));
+
+  const weeks: Day[][] = [];
+  let week: Day[] = [];
+  for (const cursor = new Date(start); cursor <= end; cursor.setUTCDate(cursor.getUTCDate() + 1)) {
+    const iso = cursor.toISOString().slice(0, 10);
+    week.push({ date: iso, count: byDate.get(iso) ?? 0 });
+    if (week.length === 7) {
+      weeks.push(week);
+      week = [];
+    }
+  }
+  return weeks;
+}
+
 function Calendar({ label, days, total }: { label: string; days: Day[]; total: number }) {
   const { t } = useI18n();
-  const weeks: Day[][] = [];
-  for (let index = 0; index < days.length; index += 7) {
-    weeks.push(days.slice(index, index + 7));
-  }
+  const weeks = toWeeks(days);
 
   return (
     <div className="flex flex-1 flex-col items-center gap-3">
@@ -23,20 +51,25 @@ function Calendar({ label, days, total }: { label: string; days: Day[]; total: n
         <span className="text-signal">{total}</span> {t("activity.contributions")}
         <span className="mt-0.5 block text-[10px] normal-case text-muted-foreground">{label}</span>
       </p>
-      <div className="w-full overflow-x-auto pb-1">
+      <div className="w-full pb-1">
         {weeks.length ? (
-          <div className="mx-auto flex w-max gap-[3px]">
-            {weeks.map((week, weekIndex) => (
-              <div key={weekIndex} className="flex flex-col gap-[3px]">
-                {week.map((day) => (
-                  <span
-                    key={day.date}
-                    title={`${day.date}: ${day.count}`}
-                    className={`size-[9px] rounded-[2px] sm:size-[11px] ${level(day.count)}`}
-                  />
-                ))}
-              </div>
-            ))}
+          <div
+            className="grid w-full gap-[3px]"
+            style={{
+              gridTemplateRows: "repeat(7, minmax(0, 1fr))",
+              gridAutoFlow: "column",
+              gridAutoColumns: "minmax(0, 1fr)",
+            }}
+          >
+            {weeks.flatMap((week) =>
+              week.map((day) => (
+                <span
+                  key={day.date}
+                  title={`${day.date}: ${day.count}`}
+                  className={`aspect-square rounded-[2px] ${level(day.count)}`}
+                />
+              )),
+            )}
           </div>
         ) : (
           <p className="text-center font-mono text-xs text-muted-foreground">
