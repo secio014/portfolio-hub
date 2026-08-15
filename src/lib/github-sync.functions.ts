@@ -6,6 +6,18 @@ import { generateSummaryText } from "@/lib/ai/summarize.server";
 const GITHUB_API = "https://api.github.com";
 
 /**
+ * Strips accidental wrapping quotes/whitespace some env-var UIs (or a
+ * quoted .env line) leave in place — GitHub returns a generic 401 "Bad
+ * credentials" for a malformed Authorization header, which is easy to
+ * mistake for a revoked/wrong token.
+ */
+export function cleanToken(token: string | undefined): string | undefined {
+  const trimmed = token?.trim();
+  if (!trimmed) return undefined;
+  return trimmed.replace(/^['"]|['"]$/g, "");
+}
+
+/**
  * Accepts either a bare handle ("octocat") or a pasted profile URL
  * ("https://github.com/octocat", "github.com/octocat/", "@octocat") and
  * returns just the handle GitHub's REST API expects.
@@ -288,7 +300,7 @@ export const syncGithubData = createServerFn({ method: "POST" })
     const username = extractGithubHandle(rawUsername);
     const org = settings?.github_org?.trim() ? extractGithubHandle(settings.github_org) : null;
 
-    const token = process.env["GITHUB_TOKEN"];
+    const token = cleanToken(process.env["GITHUB_TOKEN"]);
 
     const { data: summarized } = await context.supabase
       .from("projects")
