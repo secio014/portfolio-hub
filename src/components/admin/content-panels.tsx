@@ -40,7 +40,7 @@ function nextOrder(rows: Row[]) {
 
 /* ------------------------------- Sections -------------------------------- */
 
-const BLOCK_SECTION_LABEL_KEYS: Record<string, TranslationKey> = {
+export const BLOCK_SECTION_LABEL_KEYS: Record<string, TranslationKey> = {
   activity: "admin.content.blockActivity",
   stack: "admin.content.blockStack",
   featured: "admin.content.blockFeatured",
@@ -204,14 +204,17 @@ function SectionRow({
               {t("admin.content.fixedBlock", { key: sectionKey })}
             </p>
           </div>
-          <ToggleField
-            label={t("admin.content.visible")}
-            checked={Boolean(draft["visible"])}
-            onChange={(value) => {
-              set("visible", value);
-              onSave({ visible: value });
-            }}
-          />
+          <div className="flex items-center gap-2">
+            <ToggleField
+              label={t("admin.content.visible")}
+              checked={Boolean(draft["visible"])}
+              onChange={(value) => {
+                set("visible", value);
+                onSave({ visible: value });
+              }}
+            />
+            <RowActions onUp={onUp} onDown={onDown} />
+          </div>
         </div>
       </AdminCard>
     );
@@ -457,9 +460,7 @@ export function TimelinePanel() {
           </div>
         }
       />
-      {table.rows.length === 0 ? (
-        <EmptyState label={t("admin.content.emptyTimeline")} />
-      ) : null}
+      {table.rows.length === 0 ? <EmptyState label={t("admin.content.emptyTimeline")} /> : null}
       {TIMELINE_TYPES.map((group) => {
         const rows = table.rows.filter((row) => (row["type"] ?? "work") === group.value);
         if (rows.length === 0) return null;
@@ -620,7 +621,9 @@ export function CertificationsPanel() {
           </Button>
         }
       />
-      {table.rows.length === 0 ? <EmptyState label={t("admin.content.emptyCertifications")} /> : null}
+      {table.rows.length === 0 ? (
+        <EmptyState label={t("admin.content.emptyCertifications")} />
+      ) : null}
       {table.rows.map((row, index) => (
         <CertificationRow
           key={row["id"]}

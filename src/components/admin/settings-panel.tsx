@@ -31,7 +31,7 @@ export function useSiteSettings() {
   });
 }
 
-function useSaveSettings() {
+export function useSaveSettings() {
   const { t } = useI18n();
   const queryClient = useQueryClient();
   return async (id: string, values: Row) => {
