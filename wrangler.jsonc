@@ -1,0 +1,8 @@
+{
+  // Merged into the generated `.output/server/wrangler.json` at build time
+  // (see nitro's cloudflare preset). Adds the Workers AI binding used to
+  // auto-generate project summaries — see src/lib/ai/summarize.server.ts.
+  "ai": {
+    "binding": "AI"
+  }
+}

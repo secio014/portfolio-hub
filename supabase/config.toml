@@ -1,0 +1,14 @@
+project_id = "vpatvaowixnloahyybcm"
+
+[auth.email.smtp]
+enabled = true
+host = "smtp.resend.com"
+port = 465
+user = "resend"
+pass = "env(RESEND_SMTP_PASS)"
+admin_email = "onboarding@resend.dev"
+sender_name = "Pedro Schmitz Sécio"
+
+[auth.email.template.magic_link]
+subject = "Seu código de verificação — Pedro Schmitz Sécio"
+content_path = "./supabase/templates/magic-link.html"

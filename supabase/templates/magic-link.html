@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Código de verificação</title>
+  </head>
+  <body
+    style="
+      margin: 0;
+      padding: 0;
+      background-color: #0e1013;
+      font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    "
+  >
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #0e1013; padding: 32px 16px">
+      <tr>
+        <td align="center">
+          <table
+            role="presentation"
+            width="100%"
+            cellpadding="0"
+            cellspacing="0"
+            style="max-width: 420px; background-color: #191c22; border: 1px solid #2a2e37; border-radius: 8px; overflow: hidden"
+          >
+            <tr>
+              <td style="padding: 28px 32px 0 32px">
+                <p
+                  style="
+                    margin: 0;
+                    font-size: 11px;
+                    letter-spacing: 0.08em;
+                    text-transform: uppercase;
+                    color: #7d8590;
+                  "
+                >
+                  Pedro Schmitz Sécio · Painel administrativo
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 20px 32px 0 32px">
+                <p style="margin: 0; font-size: 15px; line-height: 1.6; color: #e6e9ef; font-family: Inter, ui-sans-serif, system-ui, sans-serif">
+                  Use o código abaixo para confirmar sua identidade e concluir a troca de senha.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 24px 32px 0 32px">
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+                    <td
+                      align="center"
+                      style="
+                        background-color: #12151a;
+                        border: 1px solid #3ddc84;
+                        border-radius: 6px;
+                        padding: 20px 16px;
+                      "
+                    >
+                      <span
+                        style="
+                          font-size: 32px;
+                          font-weight: 700;
+                          letter-spacing: 0.35em;
+                          color: #3ddc84;
+                        "
+                      >
+                        {{ .Token }}
+                      </span>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 20px 32px 0 32px">
+                <p style="margin: 0; font-size: 13px; line-height: 1.6; color: #9aa3af; font-family: Inter, ui-sans-serif, system-ui, sans-serif">
+                  O código expira em 1 hora e só pode ser usado uma vez. Não compartilhe esse código com ninguém.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 20px 32px 28px 32px">
+                <p style="margin: 0; font-size: 12px; line-height: 1.6; color: #565d69; font-family: Inter, ui-sans-serif, system-ui, sans-serif">
+                  Se você não solicitou essa alteração, ignore este e-mail — sua senha permanece inalterada.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 16px 32px; border-top: 1px solid #2a2e37">
+                <p style="margin: 0; font-size: 11px; letter-spacing: 0.04em; color: #565d69">
+                  {{ .Email }}
+                </p>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>
