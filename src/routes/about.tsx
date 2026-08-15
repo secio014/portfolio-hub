@@ -43,41 +43,46 @@ function AboutPage() {
     sectionId ? sectionBlocks.filter((block) => block.section_id === sectionId) : [];
 
   const about = sections.find((section) => section.section_key === "about");
+  const isAboutVisible = about ? about.visible !== false : true;
   const stack = Array.isArray(settings?.tech_stack) ? (settings.tech_stack as string[]) : [];
-  const work = timeline.filter((item) => (item.type ?? "work") === "work");
-  const study = timeline.filter((item) => item.type === "study");
+  const visibleTimeline = timeline.filter((item) => item.visible !== false);
+  const visibleCertifications = certifications.filter((item) => item.visible !== false);
+  const work = visibleTimeline.filter((item) => (item.type ?? "work") === "work");
+  const study = visibleTimeline.filter((item) => item.type === "study");
 
   return (
     <SiteLayout page="about">
-      <Section>
-        <SectionHeading
-          index="01"
-          title={localized(about?.title, locale) || t("nav.about")}
-          {...(localized(about?.subtitle, locale)
-            ? { subtitle: localized(about?.subtitle, locale) }
-            : {})}
-        />
-        <div className="grid gap-8 lg:grid-cols-[1.5fr_1fr]">
-          <Markdown value={localized(about?.body, locale)} />
-          {settings?.avatar_url ? (
-            <img
-              src={settings.avatar_url}
-              alt={`${settings.owner_name} portrait`}
-              loading="lazy"
-              className="aspect-square w-full rounded-lg border border-border object-cover"
-            />
-          ) : null}
-        </div>
-        {blocksFor(about?.id).length ? (
-          <div className="mt-6">
-            <SectionBlocks
-              blocks={blocksFor(about?.id)}
-              layout={String(about?.layout ?? "vertical")}
-              locale={locale}
-            />
+      {isAboutVisible ? (
+        <Section>
+          <SectionHeading
+            index="01"
+            title={localized(about?.title, locale) || t("nav.about")}
+            {...(localized(about?.subtitle, locale)
+              ? { subtitle: localized(about?.subtitle, locale) }
+              : {})}
+          />
+          <div className="grid gap-8 lg:grid-cols-[1.5fr_1fr]">
+            <Markdown value={localized(about?.body, locale)} />
+            {settings?.avatar_url ? (
+              <img
+                src={settings.avatar_url}
+                alt={`${settings.owner_name} portrait`}
+                loading="lazy"
+                className="aspect-square w-full rounded-lg border border-border object-cover"
+              />
+            ) : null}
           </div>
-        ) : null}
-      </Section>
+          {blocksFor(about?.id).length ? (
+            <div className="mt-6">
+              <SectionBlocks
+                blocks={blocksFor(about?.id)}
+                layout={String(about?.layout ?? "vertical")}
+                locale={locale}
+              />
+            </div>
+          ) : null}
+        </Section>
+      ) : null}
 
       {work.length ? (
         <Section className="border-t border-border">
@@ -98,10 +103,10 @@ function AboutPage() {
         <TechStack stack={stack} />
       </Section>
 
-      {certifications.length ? (
+      {visibleCertifications.length ? (
         <Section className="border-t border-border">
           <SectionHeading index="05" title={t("section.certifications")} />
-          <Certifications items={certifications} />
+          <Certifications items={visibleCertifications} />
         </Section>
       ) : null}
 

@@ -57,10 +57,20 @@ export function useAdminTable(table: string, orderBy = "order", ascending = true
     void queryClient.invalidateQueries({ queryKey: [table] });
   }
 
-  async function run(promise: PromiseLike<{ error: unknown }>, message: string) {
-    const { error } = await promise;
+  async function run(
+    promise: PromiseLike<{ error: unknown; data?: unknown[] | null }>,
+    message: string,
+    checkAffected = false,
+  ) {
+    const { error, data } = await promise;
     if (error) {
       toast.error((error as { message?: string }).message ?? "Algo deu errado");
+      return false;
+    }
+    if (checkAffected && Array.isArray(data) && data.length === 0) {
+      toast.error(
+        "Nada foi alterado (0 linhas afetadas) — provavelmente bloqueado por permissão (RLS). Verifique se você ainda está autenticado como admin.",
+      );
       return false;
     }
     toast.success(message);
@@ -84,7 +94,8 @@ export function useAdminTable(table: string, orderBy = "order", ascending = true
       refresh();
       return data as Row;
     },
-    update: (id: string, values: Row) => run(db.from(table).update(values).eq("id", id), "Salvo"),
+    update: (id: string, values: Row) =>
+      run(db.from(table).update(values).eq("id", id).select(), "Salvo", true),
     remove: (id: string) => run(db.from(table).delete().eq("id", id), "Excluído"),
   };
 }

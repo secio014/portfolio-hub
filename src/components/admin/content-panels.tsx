@@ -227,7 +227,10 @@ function SectionRow({
           <ToggleField
             label="Visível"
             checked={Boolean(draft["visible"])}
-            onChange={(value) => set("visible", value)}
+            onChange={(value) => {
+              set("visible", value);
+              onSave({ visible: value });
+            }}
           />
           <RowActions onUp={onUp} onDown={onDown} onDelete={onDelete} />
         </div>
@@ -506,7 +509,10 @@ function TimelineRow({
           <ToggleField
             label="Visível"
             checked={Boolean(draft["visible"])}
-            onChange={(value) => set("visible", value)}
+            onChange={(value) => {
+              set("visible", value);
+              onSave({ visible: value });
+            }}
           />
           <RowActions onUp={onUp} onDown={onDown} onDelete={onDelete} />
         </div>
@@ -640,7 +646,10 @@ function CertificationRow({
           <ToggleField
             label="Visível"
             checked={Boolean(draft["visible"])}
-            onChange={(value) => set("visible", value)}
+            onChange={(value) => {
+              set("visible", value);
+              onSave({ visible: value });
+            }}
           />
           <RowActions onUp={onUp} onDown={onDown} onDelete={onDelete} />
         </div>
@@ -750,7 +759,10 @@ function TestimonialRow({
           <ToggleField
             label="Visível"
             checked={Boolean(draft["visible"])}
-            onChange={(value) => set("visible", value)}
+            onChange={(value) => {
+              set("visible", value);
+              onSave({ visible: value });
+            }}
           />
           <RowActions onUp={onUp} onDown={onDown} onDelete={onDelete} />
         </div>
