@@ -6,6 +6,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.15";
   };
+  graphql_public: {
+    Tables: {
+      [_ in never]: never;
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json;
+          operationName?: string;
+          query?: string;
+          variables?: Json;
+        };
+        Returns: Json;
+      };
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
+  };
   public: {
     Tables: {
       admin_users: {
@@ -401,6 +426,24 @@ export type Database = {
         };
         Relationships: [];
       };
+      project_summaries: {
+        Row: {
+          project_key: string;
+          summary: Json;
+          updated_at: string;
+        };
+        Insert: {
+          project_key: string;
+          summary?: Json;
+          updated_at?: string;
+        };
+        Update: {
+          project_key?: string;
+          summary?: Json;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       projects: {
         Row: {
           cover_image_id: string | null;
@@ -497,6 +540,44 @@ export type Database = {
         };
         Relationships: [];
       };
+      section_blocks: {
+        Row: {
+          body: Json;
+          created_at: string;
+          id: string;
+          order: number;
+          section_id: string;
+          title: Json;
+          updated_at: string;
+        };
+        Insert: {
+          body?: Json;
+          created_at?: string;
+          id?: string;
+          order?: number;
+          section_id: string;
+          title?: Json;
+          updated_at?: string;
+        };
+        Update: {
+          body?: Json;
+          created_at?: string;
+          id?: string;
+          order?: number;
+          section_id?: string;
+          title?: Json;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "section_blocks_section_id_fkey";
+            columns: ["section_id"];
+            isOneToOne: false;
+            referencedRelation: "site_sections";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       site_labels: {
         Row: {
           created_at: string;
@@ -571,44 +652,6 @@ export type Database = {
         };
         Relationships: [];
       };
-      section_blocks: {
-        Row: {
-          body: Json;
-          created_at: string;
-          id: string;
-          order: number;
-          section_id: string;
-          title: Json;
-          updated_at: string;
-        };
-        Insert: {
-          body?: Json;
-          created_at?: string;
-          id?: string;
-          order?: number;
-          section_id: string;
-          title?: Json;
-          updated_at?: string;
-        };
-        Update: {
-          body?: Json;
-          created_at?: string;
-          id?: string;
-          order?: number;
-          section_id?: string;
-          title?: Json;
-          updated_at?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "section_blocks_section_id_fkey";
-            columns: ["section_id"];
-            isOneToOne: false;
-            referencedRelation: "site_sections";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
       site_sections: {
         Row: {
           body: Json;
@@ -663,6 +706,9 @@ export type Database = {
         Row: {
           avatar_url: string | null;
           email: string | null;
+          favicon_url: string | null;
+          font_mono: string | null;
+          font_sans: string | null;
           github_org: string | null;
           github_username: string | null;
           id: string;
@@ -671,12 +717,18 @@ export type Database = {
           metrics: Json;
           owner_name: string;
           singleton: boolean;
+          site_title: string | null;
           tech_stack: Json;
+          theme_accent_dark: string | null;
+          theme_accent_light: string | null;
           updated_at: string;
         };
         Insert: {
           avatar_url?: string | null;
           email?: string | null;
+          favicon_url?: string | null;
+          font_mono?: string | null;
+          font_sans?: string | null;
           github_org?: string | null;
           github_username?: string | null;
           id?: string;
@@ -685,12 +737,18 @@ export type Database = {
           metrics?: Json;
           owner_name?: string;
           singleton?: boolean;
+          site_title?: string | null;
           tech_stack?: Json;
+          theme_accent_dark?: string | null;
+          theme_accent_light?: string | null;
           updated_at?: string;
         };
         Update: {
           avatar_url?: string | null;
           email?: string | null;
+          favicon_url?: string | null;
+          font_mono?: string | null;
+          font_sans?: string | null;
           github_org?: string | null;
           github_username?: string | null;
           id?: string;
@@ -699,7 +757,10 @@ export type Database = {
           metrics?: Json;
           owner_name?: string;
           singleton?: boolean;
+          site_title?: string | null;
           tech_stack?: Json;
+          theme_accent_dark?: string | null;
+          theme_accent_light?: string | null;
           updated_at?: string;
         };
         Relationships: [];
@@ -870,6 +931,9 @@ export type CompositeTypes<
     : never;
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },

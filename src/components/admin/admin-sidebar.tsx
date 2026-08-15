@@ -17,6 +17,7 @@ import { BlogPanel, CaseStudiesPanel } from "./writing-panels";
 import { ProjectsPanel } from "./projects-panel";
 import { ProjectLabelsPanel } from "./project-labels-panel";
 import { SettingsPanel } from "./settings-panel";
+import { CustomizationPanel } from "./customization-panel";
 import { AnalyticsPanel } from "./analytics-panel";
 import { MessagesPanel } from "./messages-panel";
 import { PagesPanel } from "./pages-panel";
@@ -28,14 +29,24 @@ export type AdminGroup = { id: string; label: string; items: AdminLeaf[] };
 type AdminLeafDef = { id: string; labelKey: TranslationKey; render: () => ReactNode };
 
 const SYSTEM_EXTRA: Record<string, AdminLeafDef[]> = {
-  home: [{ id: "testimonials", labelKey: "admin.nav.testimonials", render: () => <TestimonialsPanel /> }],
+  home: [
+    { id: "testimonials", labelKey: "admin.nav.testimonials", render: () => <TestimonialsPanel /> },
+  ],
   about: [
     { id: "timeline", labelKey: "admin.nav.timeline", render: () => <TimelinePanel /> },
-    { id: "certifications", labelKey: "admin.nav.certifications", render: () => <CertificationsPanel /> },
+    {
+      id: "certifications",
+      labelKey: "admin.nav.certifications",
+      render: () => <CertificationsPanel />,
+    },
   ],
   projects: [
     { id: "projects", labelKey: "admin.nav.projects", render: () => <ProjectsPanel /> },
-    { id: "project-labels", labelKey: "admin.nav.projectLabels", render: () => <ProjectLabelsPanel /> },
+    {
+      id: "project-labels",
+      labelKey: "admin.nav.projectLabels",
+      render: () => <ProjectLabelsPanel />,
+    },
     { id: "case-studies", labelKey: "admin.nav.caseStudies", render: () => <CaseStudiesPanel /> },
   ],
   blog: [{ id: "posts", labelKey: "admin.nav.posts", render: () => <BlogPanel /> }],
@@ -45,6 +56,7 @@ const SYSTEM_EXTRA: Record<string, AdminLeafDef[]> = {
 const GLOBAL_ITEMS_BASE: { id: string; labelKey: TranslationKey }[] = [
   { id: "pages", labelKey: "admin.nav.pages" },
   { id: "labels", labelKey: "admin.nav.labels" },
+  { id: "customization", labelKey: "admin.nav.customization" },
   { id: "settings", labelKey: "admin.nav.settings" },
   { id: "analytics", labelKey: "admin.nav.analytics" },
 ];
@@ -61,7 +73,11 @@ export function useAdminNav(onSelectPage: (slug: string) => void) {
     const slug = String(page["slug"]);
     const label = String((page["title"] as Row)?.["pt"] ?? slug);
     const items: AdminLeaf[] = [
-      { id: "sections", label: t("admin.nav.sections"), render: () => <SectionsPanel pageSlug={slug} /> },
+      {
+        id: "sections",
+        label: t("admin.nav.sections"),
+        render: () => <SectionsPanel pageSlug={slug} />,
+      },
       ...(SYSTEM_EXTRA[slug] ?? []).map((entry) => ({
         id: entry.id,
         label: t(entry.labelKey),
@@ -82,9 +98,11 @@ export function useAdminNav(onSelectPage: (slug: string) => void) {
           ? () => <PagesPanel onSelectPage={onSelectPage} />
           : entry.id === "labels"
             ? () => <LabelsPanel />
-            : entry.id === "settings"
-              ? () => <SettingsPanel />
-              : () => <AnalyticsPanel />,
+            : entry.id === "customization"
+              ? () => <CustomizationPanel />
+              : entry.id === "settings"
+                ? () => <SettingsPanel />
+                : () => <AnalyticsPanel />,
     })),
   };
 

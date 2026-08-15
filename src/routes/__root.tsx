@@ -1,4 +1,4 @@
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import {
   Outlet,
   Link,
@@ -17,6 +17,84 @@ import { ThemeProvider, themeBootstrapScript } from "@/lib/theme";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { ThemeLangControls } from "@/components/site/theme-lang-controls";
+import { settingsQuery } from "@/lib/queries";
+
+const ACCENT_VARS = ["--signal", "--primary", "--ring", "--sidebar-primary", "--sidebar-ring"];
+
+/** Applies admin-configured accent colors, fonts, tab title and favicon at runtime. */
+function SiteCustomization() {
+  const { data: settings } = useQuery(settingsQuery);
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+
+  useEffect(() => {
+    if (!settings) return;
+
+    const STYLE_ID = "site-customization-vars";
+    let styleEl = document.getElementById(STYLE_ID) as HTMLStyleElement | null;
+    if (!styleEl) {
+      styleEl = document.createElement("style");
+      styleEl.id = STYLE_ID;
+      document.head.appendChild(styleEl);
+    }
+    const lightRules: string[] = [];
+    const darkRules: string[] = [];
+    if (settings.theme_accent_light) {
+      lightRules.push(...ACCENT_VARS.map((name) => `${name}: ${settings.theme_accent_light};`));
+    }
+    if (settings.theme_accent_dark) {
+      darkRules.push(...ACCENT_VARS.map((name) => `${name}: ${settings.theme_accent_dark};`));
+    }
+    if (settings.font_sans) {
+      lightRules.push(
+        `--font-sans: "${settings.font_sans}", ui-sans-serif, system-ui, sans-serif;`,
+      );
+    }
+    if (settings.font_mono) {
+      lightRules.push(
+        `--font-mono: "${settings.font_mono}", ui-monospace, SFMono-Regular, monospace;`,
+      );
+    }
+    styleEl.textContent = [
+      lightRules.length ? `:root { ${lightRules.join(" ")} }` : "",
+      darkRules.length ? `[data-theme="dark"] { ${darkRules.join(" ")} }` : "",
+    ].join("\n");
+
+    const LINK_ID = "site-customization-fonts";
+    const families = [settings.font_sans, settings.font_mono].filter(Boolean) as string[];
+    let fontLink = document.getElementById(LINK_ID) as HTMLLinkElement | null;
+    if (families.length) {
+      const query = families
+        .map((family) => `family=${family.replace(/\s+/g, "+")}:wght@400;500;600;700`)
+        .join("&");
+      const href = `https://fonts.bunny.net/css2?${query}&display=swap`;
+      if (!fontLink) {
+        fontLink = document.createElement("link");
+        fontLink.id = LINK_ID;
+        fontLink.rel = "stylesheet";
+        document.head.appendChild(fontLink);
+      }
+      if (fontLink.href !== href) fontLink.href = href;
+    } else {
+      fontLink?.remove();
+    }
+
+    if (settings.favicon_url) {
+      let iconLink = document.querySelector<HTMLLinkElement>("link[rel='icon']");
+      if (!iconLink) {
+        iconLink = document.createElement("link");
+        iconLink.rel = "icon";
+        document.head.appendChild(iconLink);
+      }
+      iconLink.href = settings.favicon_url;
+    }
+
+    if (settings.site_title) {
+      document.title = settings.site_title;
+    }
+  }, [settings, pathname]);
+
+  return null;
+}
 
 function NotFoundComponent() {
   const { t } = useI18n();
@@ -123,6 +201,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <I18nProvider>
+          <SiteCustomization />
           <PageTransition>
             {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
             <Outlet />

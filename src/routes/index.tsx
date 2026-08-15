@@ -107,14 +107,23 @@ function Home() {
     ? (activity.org_days as { date: string; count: number }[])
     : [];
 
+  const blockOrder = (key: string) =>
+    Number(
+      sections.find((section) => section.section_key === key && section.type === "block")?.order ??
+        0,
+    );
   const visibleBlocks = [
     isSectionVisible("activity") && "activity",
     isSectionVisible("stack") && "stack",
     isSectionVisible("featured") && "featured",
     isSectionVisible("testimonials") && testimonials.length && "testimonials",
     isSectionVisible("blog") && posts.length && "blog",
-  ].filter((key): key is string => Boolean(key));
+  ]
+    .filter((key): key is string => Boolean(key))
+    .sort((a, b) => blockOrder(a) - blockOrder(b));
   const blockIndex = (key: string) => String(visibleBlocks.indexOf(key) + 1).padStart(2, "0");
+  const blockBorder = (key: string) =>
+    visibleBlocks.indexOf(key) === 0 ? "" : "border-t border-border";
 
   return (
     <SiteLayout page="home">
@@ -201,79 +210,90 @@ function Home() {
         </div>
       ) : null}
 
-      {isSectionVisible("activity") ? (
-        <Section id="activity">
-          <SectionHeading index={blockIndex("activity")} title={t("section.activity")} />
-          <ContributionGraph
-            personalDays={days}
-            personalTotal={activity?.total_contributions ?? 0}
-            personalLabel={
-              settings?.github_username
-                ? `${t("activity.personal")} · @${settings.github_username}`
-                : t("activity.personal")
-            }
-            orgDays={orgDays}
-            orgTotal={activity?.org_total_contributions ?? 0}
-            orgLabel={
-              settings?.github_org ? `${t("activity.org")} · @${settings.github_org}` : undefined
-            }
-          />
-        </Section>
-      ) : null}
-
-      {isSectionVisible("stack") ? (
-        <Section id="stack" className="border-t border-border">
-          <SectionHeading index={blockIndex("stack")} title={t("section.stack")} />
-          <TechStack stack={stack} />
-        </Section>
-      ) : null}
-
-      {isSectionVisible("featured") ? (
-        <Section id="featured" className="border-t border-border">
-          <SectionHeading
-            index={blockIndex("featured")}
-            title={t("section.featured")}
-            subtitle={t("section.featuredSub")}
-          />
-          <ProjectGrid projects={shown} />
-          <div className="mt-6">
-            <Button asChild variant="outline" className="h-10 font-mono text-xs">
-              <Link to="/projects">
-                {t("section.allProjects")} <ArrowRight className="size-4" />
-              </Link>
-            </Button>
-          </div>
-        </Section>
-      ) : null}
-
-      {isSectionVisible("testimonials") && testimonials.length ? (
-        <Section id="testimonials" className="border-t border-border">
-          <SectionHeading index={blockIndex("testimonials")} title={t("section.testimonials")} />
-          <Testimonials items={testimonials} />
-        </Section>
-      ) : null}
-
-      {isSectionVisible("blog") && posts.length ? (
-        <Section id="writing" className="border-t border-border">
-          <SectionHeading index={blockIndex("blog")} title={t("section.blog")} />
-          <ul className="grid gap-3 sm:grid-cols-2">
-            {posts.slice(0, 4).map((post) => (
-              <li key={post.id} className="panel p-4">
-                <Link
-                  to="/blog/$slug"
-                  params={{ slug: post.slug }}
-                  className="font-mono text-sm font-semibold hover:text-signal"
-                >
-                  {localized(post.title, locale)}
-                </Link>
-                <div className="mt-1.5 line-clamp-2 [&_p]:text-sm [&_p]:text-muted-foreground">
-                  <Markdown value={localized(post.excerpt, locale)} />
-                </div>
-              </li>
-            ))}
-          </ul>
-        </Section>
-      ) : null}
+      {visibleBlocks.map((key) => {
+        if (key === "activity") {
+          return (
+            <Section key="activity" id="activity" className={blockBorder("activity")}>
+              <SectionHeading index={blockIndex("activity")} title={t("section.activity")} />
+              <ContributionGraph
+                personalDays={days}
+                personalTotal={activity?.total_contributions ?? 0}
+                personalLabel={
+                  settings?.github_username
+                    ? `${t("activity.personal")} · @${settings.github_username}`
+                    : t("activity.personal")
+                }
+                orgDays={orgDays}
+                orgTotal={activity?.org_total_contributions ?? 0}
+                orgLabel={
+                  settings?.github_org
+                    ? `${t("activity.org")} · @${settings.github_org}`
+                    : undefined
+                }
+              />
+            </Section>
+          );
+        }
+        if (key === "stack") {
+          return (
+            <Section key="stack" id="stack" className={blockBorder("stack")}>
+              <SectionHeading index={blockIndex("stack")} title={t("section.stack")} />
+              <TechStack stack={stack} />
+            </Section>
+          );
+        }
+        if (key === "featured") {
+          return (
+            <Section key="featured" id="featured" className={blockBorder("featured")}>
+              <SectionHeading
+                index={blockIndex("featured")}
+                title={t("section.featured")}
+                subtitle={t("section.featuredSub")}
+              />
+              <ProjectGrid projects={shown} />
+              <div className="mt-6">
+                <Button asChild variant="outline" className="h-10 font-mono text-xs">
+                  <Link to="/projects">
+                    {t("section.allProjects")} <ArrowRight className="size-4" />
+                  </Link>
+                </Button>
+              </div>
+            </Section>
+          );
+        }
+        if (key === "testimonials") {
+          return (
+            <Section key="testimonials" id="testimonials" className={blockBorder("testimonials")}>
+              <SectionHeading
+                index={blockIndex("testimonials")}
+                title={t("section.testimonials")}
+              />
+              <Testimonials items={testimonials} />
+            </Section>
+          );
+        }
+        return (
+          <Section key="writing" id="writing" className={blockBorder("blog")}>
+            <SectionHeading index={blockIndex("blog")} title={t("section.blog")} />
+            <ul className="grid gap-3 sm:grid-cols-2">
+              {posts.slice(0, 4).map((post) => (
+                <li key={post.id} className="panel p-4">
+                  <Link
+                    to="/blog/$slug"
+                    params={{ slug: post.slug }}
+                    className="font-mono text-sm font-semibold hover:text-signal"
+                  >
+                    {localized(post.title, locale)}
+                  </Link>
+                  <div className="mt-1.5 line-clamp-2 [&_p]:text-sm [&_p]:text-muted-foreground">
+                    <Markdown value={localized(post.excerpt, locale)} />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </Section>
+        );
+      })}
 
       {customSections.map((section, index) => (
         <Section key={section.id} className="border-t border-border">
