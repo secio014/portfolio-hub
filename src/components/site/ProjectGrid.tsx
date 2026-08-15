@@ -167,12 +167,12 @@ function ProjectModal({
             </DialogHeader>
 
             <div className="space-y-4">
-              <div className="rounded-md border border-signal/30 bg-signal/5 p-3">
-                <p className="mono-label mb-1 text-signal">{t("projects.summary")}</p>
-                <p className="text-sm text-foreground">
-                  {project.summary || t("projects.summaryPending")}
-                </p>
-              </div>
+              {project.summary ? (
+                <div className="rounded-md border border-signal/30 bg-signal/5 p-3">
+                  <p className="mono-label mb-1 text-signal">{t("projects.summary")}</p>
+                  <p className="text-sm text-foreground">{project.summary}</p>
+                </div>
+              ) : null}
 
               {project.description ? (
                 <div className="[&_p]:text-sm [&_p]:text-muted-foreground">
