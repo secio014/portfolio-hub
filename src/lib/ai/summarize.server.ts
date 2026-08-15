@@ -1,4 +1,6 @@
-const MODEL = "@cf/meta/llama-3.1-8b-instruct";
+// @cf/meta/llama-3.1-8b-instruct was deprecated 2026-05-30; -fast is its
+// direct replacement (same chat-messages input, same `response` output).
+const MODEL = "@cf/meta/llama-3.1-8b-instruct-fast";
 
 export type ProjectSummary = { en: string; pt: string; es: string };
 
