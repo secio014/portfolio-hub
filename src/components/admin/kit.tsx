@@ -1,8 +1,9 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
-import { ChevronDown, ChevronUp, Trash2 } from "lucide-react";
+import { CalendarDays, ChevronDown, ChevronUp, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -156,18 +157,25 @@ export function TextField({
   disabled?: boolean;
   maxLength?: number;
 }) {
+  const isDate = type === "date";
+
   return (
     <div className="space-y-1.5">
       <Label className="mono-label">{label}</Label>
-      <Input
-        type={type}
-        value={value}
-        disabled={disabled}
-        placeholder={placeholder}
-        maxLength={maxLength}
-        onChange={(event) => onChange(event.target.value)}
-        className="h-10 font-mono text-xs"
-      />
+      <div className="relative">
+        <Input
+          type={type}
+          value={value}
+          disabled={disabled}
+          placeholder={placeholder}
+          maxLength={maxLength}
+          onChange={(event) => onChange(event.target.value)}
+          className={cn("h-10 font-mono text-xs", isDate && "pr-9")}
+        />
+        {isDate ? (
+          <CalendarDays className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        ) : null}
+      </div>
     </div>
   );
 }

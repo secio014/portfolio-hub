@@ -170,6 +170,37 @@
     background: color-mix(in oklab, var(--signal) 35%, transparent);
   }
 
+  /* Native date/time inputs: match the popup chrome to the active theme and hide the
+     browser's default calendar glyph so our CalendarDays icon (see TextField) is the
+     only one shown. */
+  input[type="date"],
+  input[type="datetime-local"],
+  input[type="time"] {
+    color-scheme: light;
+  }
+
+  [data-theme="dark"] input[type="date"],
+  [data-theme="dark"] input[type="datetime-local"],
+  [data-theme="dark"] input[type="time"] {
+    color-scheme: dark;
+  }
+
+  /* Stretched to cover the whole input (not just the browser's default tiny slot) so
+     clicking anywhere on the field — including on our overlaid CalendarDays icon,
+     which is pointer-events-none — opens the picker. */
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
   /* Smooth, snappy default for interactive elements — colors/transform only,
      never layout properties, so it stays fast and never feels sluggish. */
   a,

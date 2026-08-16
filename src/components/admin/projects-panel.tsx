@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Github, Plus, Sparkles, Star } from "lucide-react";
+import { Plus, Sparkles, Star } from "lucide-react";
+import { SiGithub } from "react-icons/si";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -156,7 +157,7 @@ export function ProjectsPanel() {
       {repoCache.length > 0 ? (
         <div className="space-y-4 pt-4">
           <h3 className="mono-label flex items-center gap-2">
-            <Github className="size-3.5" /> {t("admin.projects.syncedFromGithub")}
+            <SiGithub className="size-3.5" /> {t("admin.projects.syncedFromGithub")}
           </h3>
           {repoCache.map((repo) => (
             <ProjectRow
@@ -218,7 +219,7 @@ function FeaturedPicker({ items }: { items: FeaturedItem[] }) {
               <Switch checked={item.featured} onCheckedChange={item.onToggle} />
               <span className="truncate">{item.title}</span>
               {item.isGithub ? (
-                <Github className="ml-auto size-3 shrink-0 text-muted-foreground" />
+                <SiGithub className="ml-auto size-3 shrink-0 text-muted-foreground" />
               ) : null}
             </label>
           </li>

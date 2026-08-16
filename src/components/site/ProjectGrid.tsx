@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
-import { ChevronDown, ExternalLink, Github, Star, Building2 } from "lucide-react";
+import { ChevronDown, ExternalLink, Star, Building2 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { SiGithub } from "react-icons/si";
 import { labelColorClass, labelColorStyle, type DisplayProject } from "@/lib/projects";
 import { useI18n } from "@/lib/i18n";
 import { trackEvent } from "@/lib/queries";
@@ -30,7 +31,7 @@ function ProjectActions({ project }: { project: DisplayProject }) {
               trackEvent("project_click", project.key);
             }}
           >
-            <Github className="size-3.5" /> {t("projects.repo")}
+            <SiGithub className="size-3.5" /> {t("projects.repo")}
           </a>
         </Button>
       ) : null}

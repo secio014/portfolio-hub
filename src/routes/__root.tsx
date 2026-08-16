@@ -21,6 +21,14 @@ import { settingsQuery } from "@/lib/queries";
 
 const ACCENT_VARS = ["--signal", "--primary", "--ring", "--sidebar-primary", "--sidebar-ring"];
 
+/** Hover/tint tokens derived from the chosen accent so hover states follow it too. */
+const DERIVED_ACCENT_RULES = [
+  "--accent: color-mix(in oklab, var(--signal) 14%, var(--background));",
+  "--accent-foreground: color-mix(in oklab, var(--signal) 65%, var(--foreground));",
+  "--sidebar-accent: color-mix(in oklab, var(--signal) 14%, var(--sidebar));",
+  "--sidebar-accent-foreground: color-mix(in oklab, var(--signal) 65%, var(--sidebar-foreground));",
+];
+
 /** Applies admin-configured accent colors, fonts, tab title and favicon at runtime. */
 function SiteCustomization() {
   const { data: settings } = useQuery(settingsQuery);
@@ -36,26 +44,33 @@ function SiteCustomization() {
       styleEl.id = STYLE_ID;
       document.head.appendChild(styleEl);
     }
+    // Light/dark rules use mutually-exclusive selectors (rather than relying on
+    // cascade order between `:root` and `[data-theme="dark"]`) so one theme's
+    // accent can never bleed into the other.
     const lightRules: string[] = [];
     const darkRules: string[] = [];
+    const sharedRules: string[] = [];
     if (settings.theme_accent_light) {
       lightRules.push(...ACCENT_VARS.map((name) => `${name}: ${settings.theme_accent_light};`));
+      lightRules.push(...DERIVED_ACCENT_RULES);
     }
     if (settings.theme_accent_dark) {
       darkRules.push(...ACCENT_VARS.map((name) => `${name}: ${settings.theme_accent_dark};`));
+      darkRules.push(...DERIVED_ACCENT_RULES);
     }
     if (settings.font_sans) {
-      lightRules.push(
+      sharedRules.push(
         `--font-sans: "${settings.font_sans}", ui-sans-serif, system-ui, sans-serif;`,
       );
     }
     if (settings.font_mono) {
-      lightRules.push(
+      sharedRules.push(
         `--font-mono: "${settings.font_mono}", ui-monospace, SFMono-Regular, monospace;`,
       );
     }
     styleEl.textContent = [
-      lightRules.length ? `:root { ${lightRules.join(" ")} }` : "",
+      sharedRules.length ? `:root { ${sharedRules.join(" ")} }` : "",
+      lightRules.length ? `:root:not([data-theme="dark"]) { ${lightRules.join(" ")} }` : "",
       darkRules.length ? `[data-theme="dark"] { ${darkRules.join(" ")} }` : "",
     ].join("\n");
 
