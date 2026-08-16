@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowUpRight, Github, Linkedin, Mail } from "lucide-react";
+import { ArrowUpRight, Mail } from "lucide-react";
 import type { ReactNode } from "react";
+import { SiGithub } from "react-icons/si";
+import { FaLinkedin } from "react-icons/fa6";
 import { SiteLayout, Section, useSettings } from "@/components/site/SiteLayout";
 import { SectionHeading } from "@/components/site/SectionHeading";
 import { ContactForm } from "@/components/site/ContactForm";
@@ -116,7 +118,7 @@ function ContactPage() {
             {settings?.github_username ? (
               <ContactLink
                 href={`https://github.com/${settings.github_username}`}
-                icon={<Github className="size-4" />}
+                icon={<SiGithub className="size-4" />}
                 label="GitHub"
                 value={`@${settings.github_username}`}
               />
@@ -124,7 +126,7 @@ function ContactPage() {
             {settings?.linkedin_url ? (
               <ContactLink
                 href={settings.linkedin_url}
-                icon={<Linkedin className="size-4" />}
+                icon={<FaLinkedin className="size-4" />}
                 label="LinkedIn"
                 value={
                   settings.linkedin_url

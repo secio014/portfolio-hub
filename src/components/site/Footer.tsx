@@ -1,4 +1,6 @@
-import { Github, Linkedin, Mail } from "lucide-react";
+import { Mail } from "lucide-react";
+import { SiGithub } from "react-icons/si";
+import { FaLinkedin } from "react-icons/fa6";
 import { useI18n } from "@/lib/i18n";
 
 export function Footer({
@@ -39,7 +41,7 @@ export function Footer({
             aria-label="GitHub"
             className="text-muted-foreground hover:text-signal"
           >
-            <Github className="size-4" />
+            <SiGithub className="size-4" />
           </a>
           <a
             href={linkedinUrl}
@@ -48,7 +50,7 @@ export function Footer({
             aria-label="LinkedIn"
             className="text-muted-foreground hover:text-signal"
           >
-            <Linkedin className="size-4" />
+            <FaLinkedin className="size-4" />
           </a>
         </div>
       </div>

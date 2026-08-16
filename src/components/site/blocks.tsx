@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Award, ExternalLink, Linkedin, Share2 } from "lucide-react";
+import { Award, ExternalLink, Share2 } from "lucide-react";
+import { FaLinkedin } from "react-icons/fa6";
 import { useI18n, localized } from "@/lib/i18n";
 import { getTechIcon } from "@/lib/tech-stack";
 import { Button } from "@/components/ui/button";
@@ -174,7 +175,7 @@ export function ShareOnLinkedIn({ url }: { url?: string }) {
         target="_blank"
         rel="noreferrer noopener"
       >
-        <Linkedin className="size-3.5" />
+        <FaLinkedin className="size-3.5" />
         {t("share.linkedin")}
         <Share2 className="size-3.5" />
       </a>
