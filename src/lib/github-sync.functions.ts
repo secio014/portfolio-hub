@@ -63,6 +63,27 @@ async function githubFetch<T>(path: string, token: string | undefined): Promise<
 }
 
 /**
+ * Returns false only when GitHub explicitly rejects the token (401 — expired,
+ * revoked or malformed). Any other outcome (network blip, 5xx, rate limit)
+ * counts as valid so a transient error never silently drops a good token.
+ */
+async function isGithubTokenValid(token: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${GITHUB_API}/user`, {
+      headers: {
+        Accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "User-Agent": "portfolio-hub-sync",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return res.status !== 401;
+  } catch {
+    return true;
+  }
+}
+
+/**
  * Fetches a repo's README as plain markdown text (empty string if it has
  * none). Used as richer input for the AI summary than GitHub's one-line repo
  * description, both for auto-generation on sync and the admin's "generate
@@ -262,8 +283,11 @@ export const getGithubSyncStatus = createServerFn({ method: "GET" })
       .limit(1)
       .maybeSingle();
 
+    const token = cleanToken(process.env["GITHUB_TOKEN"]);
+
     return {
-      hasToken: Boolean(process.env["GITHUB_TOKEN"]),
+      hasToken: Boolean(token),
+      tokenValid: token ? await isGithubTokenValid(token) : false,
       username: settings?.github_username?.trim()
         ? extractGithubHandle(settings.github_username)
         : null,
@@ -300,7 +324,12 @@ export const syncGithubData = createServerFn({ method: "POST" })
     const username = extractGithubHandle(rawUsername);
     const org = settings?.github_org?.trim() ? extractGithubHandle(settings.github_org) : null;
 
-    const token = cleanToken(process.env["GITHUB_TOKEN"]);
+    // An expired/revoked token makes every GitHub call 401 — including the
+    // public repo listing, which works fine unauthenticated. Drop it so repos
+    // still sync, and skip only the contribution calendar (GraphQL needs auth).
+    const configuredToken = cleanToken(process.env["GITHUB_TOKEN"]);
+    const tokenInvalid = configuredToken ? !(await isGithubTokenValid(configuredToken)) : false;
+    const token = tokenInvalid ? undefined : configuredToken;
 
     const { data: summarized } = await context.supabase
       .from("projects")
@@ -407,6 +436,8 @@ export const syncGithubData = createServerFn({ method: "POST" })
       activitySynced,
       warning: activitySynced
         ? null
-        : "GITHUB_TOKEN not set on the server — contribution activity was not updated.",
+        : tokenInvalid
+          ? "GITHUB_TOKEN is invalid or expired (GitHub returned 401) — repos were synced, but contribution activity was not updated."
+          : "GITHUB_TOKEN not set on the server — contribution activity was not updated.",
     };
   });

@@ -146,6 +146,19 @@ export function SettingsPanel() {
             </div>
           </div>
         ) : null}
+        {githubStatus?.hasToken && !githubStatus.tokenValid ? (
+          <div className="flex items-start gap-2.5 rounded-md border border-warn/40 bg-warn/10 p-3">
+            <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warn" />
+            <div className="space-y-1">
+              <p className="font-mono text-[11px] font-semibold text-warn">
+                {t("admin.settings.invalidTokenTitle")}
+              </p>
+              <p className="font-mono text-[11px] text-muted-foreground">
+                {t("admin.settings.invalidTokenDesc")}
+              </p>
+            </div>
+          </div>
+        ) : null}
         {githubStatus?.hasToken && !githubStatus.username ? (
           <div className="flex items-start gap-2.5 rounded-md border border-warn/40 bg-warn/10 p-3">
             <AlertTriangle className="mt-0.5 size-4 shrink-0 text-warn" />

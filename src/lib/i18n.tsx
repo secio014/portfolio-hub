@@ -357,6 +357,9 @@ const dict = {
     "admin.settings.githubOrg": "GitHub organization",
     "admin.settings.githubUsername": "GitHub username",
     "admin.settings.hint": "Identity, social links and homepage metrics.",
+    "admin.settings.invalidTokenDesc":
+      "GitHub rejected the configured token (401). Repositories still sync without it, but the contribution graph won't update. Generate a new personal access token and replace GITHUB_TOKEN in the server's environment variables (local .env and/or deploy panel).",
+    "admin.settings.invalidTokenTitle": "GITHUB_TOKEN is invalid or expired",
     "admin.settings.linkedinUrl": "LinkedIn URL",
     "admin.settings.metricLabel": "Metric · {key}",
     "admin.settings.noTokenDescAfter":
@@ -745,6 +748,9 @@ const dict = {
     "admin.settings.githubOrg": "Organização do GitHub",
     "admin.settings.githubUsername": "Usuário do GitHub",
     "admin.settings.hint": "Identidade, links sociais e métricas da página inicial.",
+    "admin.settings.invalidTokenDesc":
+      "O GitHub rejeitou o token configurado (401). Os repositórios continuam sincronizando sem ele, mas o gráfico de contribuições não é atualizado. Gere um novo personal access token e substitua GITHUB_TOKEN nas variáveis de ambiente do servidor (.env local e/ou painel de deploy).",
+    "admin.settings.invalidTokenTitle": "GITHUB_TOKEN inválido ou expirado",
     "admin.settings.linkedinUrl": "URL do LinkedIn",
     "admin.settings.metricLabel": "Métrica · {key}",
     "admin.settings.noTokenDescAfter":
@@ -1138,6 +1144,9 @@ const dict = {
     "admin.settings.githubOrg": "Organización de GitHub",
     "admin.settings.githubUsername": "Usuario de GitHub",
     "admin.settings.hint": "Identidad, enlaces sociales y métricas de la página de inicio.",
+    "admin.settings.invalidTokenDesc":
+      "GitHub rechazó el token configurado (401). Los repositorios siguen sincronizándose sin él, pero el gráfico de contribuciones no se actualiza. Genera un nuevo personal access token y reemplaza GITHUB_TOKEN en las variables de entorno del servidor (.env local y/o panel de despliegue).",
+    "admin.settings.invalidTokenTitle": "GITHUB_TOKEN inválido o expirado",
     "admin.settings.linkedinUrl": "URL de LinkedIn",
     "admin.settings.metricLabel": "Métrica · {key}",
     "admin.settings.noTokenDescAfter":
